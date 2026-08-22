@@ -1,6 +1,6 @@
 # When Governance Fails First: How GRC Breakdowns Create SOC Blind Spots
 
-**Series:** SOC + GRC Advanced Attack Chain Research 
+**Series:** SOC + GRC Advanced Attack Chain Research  
 **Topic:** GRC-Primary Analysis – Security Operations Center (SOC) Failure as a Consequence  
 **Date:** 2026-08-20  
 **Target Audience:** SOC Managers, GRC Leads, Detection Engineers, Security Architects  
