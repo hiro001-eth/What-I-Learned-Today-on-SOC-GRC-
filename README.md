@@ -1,8 +1,6 @@
 # SOC + GRC Operational Research: Attack Chain Architecture & Exception Decay
 
 [![Domain: SOC + GRC Integration](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20Integration-1E293B?style=for-the-badge&logo=shield)](#)
-[![Queries: KQL | SPL | Cypher | VQL | SQL](https://img.shields.io/badge/Telemetry-KQL%20%7C%20SPL%20%7C%20Cypher%20%7C%20VQL%20%7C%20SQL-2563EB?style=for-the-badge)](#)
-[![Status: Complete Series](https://img.shields.io/badge/Status-Complete%20Series-059669?style=for-the-badge)](#)
 [![Papers: 11 Published](https://img.shields.io/badge/Papers-11%20Published-7C3AED?style=for-the-badge)](#)
 
 ---
