@@ -114,25 +114,6 @@ Formalizes the 4-Channel Closed Loop architecture (Risk Register Delta, Detectio
 
 ---
 
-## Core Analytical & Governance Formulas
-
-### 1. Loop Integrity Score ($LIS$)
-$$LIS = \frac{\prod_{i=1}^{4} C_i}{N} = \frac{C_1 \times C_2 \times C_3 \times C_4}{N}$$
-
-### 2. Exception Decay Score ($EDS$)
-$$EDS(e,t) = SIR(e,t) \times AL_n(e,t) \times CC(e,t) \times CL(e,t)$$
-
-### 3. Ownership Decay Score with PET Component ($ODS$)
-$$ODS(o,t) = Single(o) \times Transfer(o,t) \times Visibility(o,t) \times Tenure(o,t) \times PET(o,t)$$
-
-### 4. Compliance Debt ($CD$)
-$$CD = \sum \left( V_i \times P_i \times T_i \right) \times \Omega_{bypass}$$
-
-### 5. Entropy Decay ($dS$)
-$$dS = \frac{dQ_{suppress}}{T_{coverage}} + \sigma_{drift}$$
-
----
-
 ## Series Changelog
 
 | Date | Paper | Version | Notes |
@@ -153,10 +134,9 @@ $$dS = \frac{dQ_{suppress}}{T_{coverage}} + \sigma_{drift}$$
 
 ## About the Author
 
-**hiro001-eth** (Manjil Katuwal) researches the operational intersection of Security Operations, Privacy Engineering, and Governance, Risk, and Compliance. The focus is on what actually happens when these departments don't share data, models, or vocabulary: controls that degrade silently, exceptions that outlive their authorization, and incidents that were structurally predictable months before they happened.
+**I** researches the operational intersection of Security Operations, Privacy Engineering, and Governance, Risk, and Compliance. The focus is on what actually happens when these departments don't share data, models, or vocabulary: controls that degrade silently, exceptions that outlive their authorization, and incidents that were structurally predictable months before they happened.
 
 ---
 
-*"Exceptions don't fail. They decay. Privacy governance has three owners and zero owners. The only choice is whether you measure the decay or inherit it."*
 
-*-- hiro001-eth, 25-09-2026*
+*-- Manjil Katuwal, 25-09-2026*
