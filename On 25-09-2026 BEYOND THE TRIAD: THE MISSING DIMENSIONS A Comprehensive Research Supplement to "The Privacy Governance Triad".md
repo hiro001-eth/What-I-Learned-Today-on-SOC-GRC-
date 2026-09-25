@@ -3,8 +3,6 @@
 
 [![Domain: SOC + GRC + Privacy](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20%2B%20Privacy-1E293B?style=for-the-badge&logo=shield)](#)
 [![Series: SOC-GRC Research](https://img.shields.io/badge/Series-What--I--Learned--Today--on--SOC--GRC-2563EB?style=for-the-badge)](#)
-[![Status: Complete Supplement](https://img.shields.io/badge/Status-Complete%20Supplement-059669?style=for-the-badge)](#)
-[![Version: 1.0](https://img.shields.io/badge/Version-1.0-7C3AED?style=for-the-badge)](#)
 [![Date: 25-09-2026](https://img.shields.io/badge/Date-25--09--2026-D97706?style=for-the-badge)](#)
 
 ---
