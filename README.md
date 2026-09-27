@@ -112,7 +112,8 @@ Formalizes the 4-Channel Closed Loop architecture (Risk Register Delta, Detectio
 Expands the Privacy Triad into a 2026 Privacy Governance Lattice. Details multi-jurisdictional compliance (GDPR, CCPA/CPRA, LGPD, PIPL, DPDP, POPIA), Privacy-Enhancing Technologies ($PET(o,t)$ formula), AI inference inventory & agentic risk surfaces, real-world case law post-mortems (Twitter, HSE, Capita, WUSPI), automated classification-to-notification SOAR pipelines, and board metrics ($PCR$, $AIIC$).
 
 ### 12. [27-09-2026: The Privacy Governance Triad and the Unsanctioned Processing Exception](./On%2027-09-2026%20THE%20PRIVACY%20GOVERNANCE%20TRIAD%20AND%20THE%20UNSANCTIONED%20PROCESSING%20EXCEPTION.md)
-Formalizes diffuse ownership across DPO, SOC, and GRC functions. Introduces the Role-Responsibility Matrix (RRM), Ownership Decay Score ($ODS$), Attested Ownership Chains (AOC), and the Privacy Engineer role. Defines Unsanctioned Processing Exceptions (UPE) across 4 shadow AI classes, formalizing the Privacy Exception Decay Score ($PEDS$), Shadow AI Exposure Index ($SAEI$), production detection queries (KQL/SPL/SQL), and closed-loop SOAR playbooks.
+Formalizes diffuse ownership across DPO, SOC, and GRC functions. Introduces the Role-Responsibility Matrix (RRM), Ownership Decay Score (ODS), Attested Ownership Chains (AOC), and the Privacy Engineer role. Defines Unsanctioned Processing Exceptions (UPE) across 4 shadow AI classes, formalizing the Privacy Exception Decay Score (PEDS), Shadow AI Exposure Index (SAEI), production detection queries (KQL, SPL, SQL), and closed-loop SOAR playbooks.
+
 
 ---
 
@@ -129,9 +130,10 @@ Formalizes diffuse ownership across DPO, SOC, and GRC functions. Introduces the 
 | 07-09-2026 | SOC-GRC Entropy Model | 3.0 | Empirical validation draft |
 | 10-09-2026 | Risk Acceptance Backdoors & Compliance Debt | 1.0 | Initial publication |
 | 14-09-2026 | Exception Lifecycle Decay Model (ELDM) | 1.1 | Post-review revision |
-| 15-09-2026 | The IR-GRC Closed Loop | 1.0 | Series Conclusion; 4-Channel Architecture, $LIS$ score, SOAR payloads & Regulatory Mappings |
+| 15-09-2026 | The IR-GRC Closed Loop | 1.0 | Series Conclusion; 4-Channel Architecture, LIS score, SOAR payloads & Regulatory Mappings |
 | 25-09-2026 | Beyond the Triad: Privacy Governance Lattice | 1.0 | Multi-jurisdictional taxonomy, PET component, AI governance & board metrics |
-| 27-09-2026 | The Privacy Governance Triad & UPE | 1.0 | Initial publication; $UPS$ & $SRI$ mathematical models, KQL/SPL queries, PrivOps automation engine |
+| 27-09-2026 | The Privacy Governance Triad & UPE | 1.0 | Initial publication; ODS and PEDS frameworks, KQL, SPL, and SQL queries, PrivOps automation engine |
+
 
 ---
 

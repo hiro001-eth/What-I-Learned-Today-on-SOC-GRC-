@@ -13,10 +13,10 @@
 | **Document Title** | The Privacy Governance Triad and the Unsanctioned Processing Exception |
 | **Subtitle** | Diffuse Ownership, Born-Rotten Risk, and the Architecture of Irreversible Governance Failure in SOC + GRC Operations |
 | **Author** | Manjil Katuwal (hiro001-eth) |
-| **Series** | Exception Lifecycle Decay Model (ELDM) Series — Papers 11 & 12 |
+| **Series** | Exception Lifecycle Decay Model (ELDM) Series, Papers 11 and 12 |
 | **Classification** | Organizational Security Research / Privacy Governance Architecture / AI Risk |
 | **Target Audience** | CISOs, DPOs, SOC Managers, GRC Leads, Privacy Engineers, Security Architects, AI Governance Leads |
-| **Methodology** | Mixed-methods — role-theoretic analysis, artifact-flow mapping, decay modeling, query-based empirical verification |
+| **Methodology** | Mixed-methods: role-theoretic analysis, artifact-flow mapping, decay modeling, query-based empirical verification |
 | **Publication Date** | September 27, 2026 |
 | **Status** | Pre-publication draft for peer review |
 | **Companion Papers** | ELDM (Paper 1), Phantom Asset Detection (Paper 7), Exclusion-Zone Mapping (Paper 8), IR-GRC Loop (Paper 10) |
@@ -25,15 +25,15 @@
 
 ## ABSTRACT
 
-Data privacy risk is owned by three professional roles — the Data Protection Officer (DPO), the SOC Analyst / Detection Engineer, and the GRC Officer / Auditor — each of whom holds a distinct, non-overlapping, and mutually invisible fragment of the same obligation set. The DPO signs for lawfulness. The SOC monitors for detection. The GRC officer evidences for audit. None of the three can see the full risk surface, and none of the three can see the other two's blind spots.
+Data privacy risk is owned by three professional roles: the Data Protection Officer (DPO), the SOC Analyst / Detection Engineer, and the GRC Officer / Auditor. Each of these roles holds a distinct, non-overlapping, and mutually invisible fragment of the same obligation set. The DPO signs for lawfulness. The SOC monitors for detection. The GRC officer evidences for audit. None of the three can see the full risk surface, and none of the three can see the other two's blind spots.
 
-This paper formalizes the Privacy Governance Triad, a structural model of diffuse ownership in privacy operations, and introduces three original constructs: the Role-Responsibility Matrix (RRM), the Ownership Decay Score (ODS), and Attested Ownership Chains (AOC). We argue that classic RACI models fail structurally for privacy because the three roles do not share a system of record, a vocabulary, or a definition of "done."
+This paper formalizes the Privacy Governance Triad, a structural model of diffuse ownership in privacy operations. We introduce three original constructs: the Role-Responsibility Matrix (RRM), the Ownership Decay Score (ODS), and Attested Ownership Chains (AOC). We argue that classic RACI models fail structurally for privacy because the three roles do not share a system of record, a vocabulary, or a definition of "done."
 
-We then extend this analysis into the newest and most dangerous manifestation of the Triad's structural failure: the Unsanctioned Processing Exception (UPE) — a risk class created by shadow AI use that is categorically different from every registered exception the organization has ever managed. UPEs are never registered. They carry no expiry. They have no owner. They have no compensating detection. And they are irreversible in a way that no other exception category is: when an employee pastes customer PII into a consumer AI model that trains on its inputs, the data cannot be retrieved, deleted, or remediated. The exception exists. The data left. The window for any technical response closed the moment the employee clicked Submit.
+We then extend this analysis into the newest and most dangerous manifestation of the Triad's structural failure: the Unsanctioned Processing Exception (UPE), a risk class created by shadow AI use that is categorically different from every registered exception the organization has ever managed. UPEs are never registered. They carry no expiry. They have no owner. They have no compensating detection. And they are irreversible in a way that no other exception category is: when an employee pastes customer PII into a consumer AI model that trains on its inputs, the data cannot be retrieved, deleted, or remediated. The exception exists. The data left. The window for any technical response closed the moment the employee clicked Submit.
 
-We formalize the Privacy Exception Decay Score (PEDS), a formula that measures UPE health across four dimensions — Registration, Reversibility, Inventory coverage, and Article-collision surface — and prove that shadow AI processing consistently produces PEDS = 0 across all four dimensions simultaneously from the moment the data leaves the organization. We define four UPE classes (paste-to-prompt, AI notetaker integration, OAuth browser extension, agentic/MCP workflow) with distinct risk profiles, detection telemetry, and regulatory exposure. We provide production KQL, SPL, and SQL queries for each class. We extend the Compliance Debt metric to include UPE contribution. We define the Shadow AI Exposure Index (SAEI) as a board-presentable metric. And we describe the SOAR-based closed-loop architecture that feeds UPE discoveries into the exception register before the breach notification window opens.
+We detail the Privacy Exception Decay Score (PEDS), a framework that measures UPE health across four dimensions: Registration, Reversibility, Inventory coverage, and Article-collision surface. We show that shadow AI processing consistently produces total decay across all four dimensions simultaneously from the moment the data leaves the organization. We define four UPE classes (paste-to-prompt, AI notetaker integration, OAuth browser extension, agentic/MCP workflow) with distinct risk profiles, detection telemetry, and regulatory exposure. We provide production KQL, SPL, and SQL queries for each class. We extend the Compliance Debt metric to include UPE contribution. We define the Shadow AI Exposure Index (SAEI) as a board-presentable metric. And we describe the SOAR-based closed-loop architecture that feeds UPE discoveries into the exception register before the breach notification window opens.
 
-We propose the Privacy Engineer as the missing fourth vertex — a role that translates legal obligation into telemetry, and telemetry into legal evidence — and we provide a query pack (KQL, SQL, SPL) for empirical verification of ownership decay in production environments. The paper concludes with a research agenda for measuring ODS across organizations and for building the CISO's consolidated accountability dashboard.
+We propose the Privacy Engineer as the missing fourth vertex, a role that translates legal obligation into telemetry, and telemetry into legal evidence. We provide a query pack (KQL, SQL, SPL) for empirical verification of ownership decay in production environments. The paper concludes with a research agenda for measuring ODS across organizations and for building the CISO's consolidated accountability dashboard.
 
 ---
 
@@ -73,9 +73,9 @@ We propose the Privacy Engineer as the missing fourth vertex — a role that tra
 ## 1. Introduction: The Three-Body Problem of Privacy Risk
 
 ### 1.1 The Opening Scene
-A SOC analyst closes a ticket at 03:47 on a Tuesday. The alert was "unusual outbound data transfer — 2.3 GB to an unclassified external endpoint." The analyst checked the source host, confirmed it was a sanctioned backup job, wrote "benign — approved backup" in the ticket, and closed it. The ticket is gone in eleven seconds.
+A SOC analyst closes a ticket at 03:47 on a Tuesday. The alert was: unusual outbound data transfer of 2.3 GB to an unclassified external endpoint. The analyst checked the source host, confirmed it was a sanctioned backup job, wrote "benign: approved backup" in the ticket, and closed it. The ticket is gone in eleven seconds.
 
-The data in that transfer was a PostgreSQL dump containing 14,000 rows of customer records: names, email addresses, hashed passwords, and — buried in a JSON column nobody indexed — passport numbers and medical leave dates. That is special-category data under GDPR Article 9. The transfer was to a vendor whose Data Processing Agreement expired nine months ago.
+The data in that transfer was a PostgreSQL dump containing 14,000 rows of customer records: names, email addresses, hashed passwords, and, buried in a JSON column nobody indexed, passport numbers and medical leave dates. That is special-category data under GDPR Article 9. The transfer was to a vendor whose Data Processing Agreement expired nine months ago.
 
 The DPO does not know this transfer happened. The GRC officer does not know the vendor's DPA expired. The SOC analyst does not know the JSON column existed. All three roles did their jobs correctly, by their own definitions. And the organization is now in a state of undetected, unowned, legally material privacy exposure.
 
@@ -103,24 +103,24 @@ graph TB
 ```
 
 ### 1.2 The Thesis
-Data privacy risk has three owners and zero owners. The DPO signs for it, the SOC monitors for it, and the GRC officer evidences it — but no single role can see all three layers at once. Privacy risk isn't unowned; it's diffusely owned, and diffuse ownership is the fastest-decaying ownership there is.
+Data privacy risk has three owners and zero owners. The DPO signs for it, the SOC monitors for it, and the GRC officer evidences it, but no single role can see all three layers at once. Privacy risk is not unowned. It is diffusely owned, and diffuse ownership is the fastest-decaying ownership there is.
 
 This paper formalizes that statement into a measurable, testable, and remediable model. It then extends that model into the newest and most dangerous instance of diffuse ownership: the shadow AI processing exception that is born with zero governance and zero reversibility.
 
 ### 1.3 Why This Paper Exists Now
 Five converging trends make this the correct moment for this research:
 
-1. **Role convergence in security and GRC**: The "security GRC engineer" and "GRC analyst" hybrid roles have grown approximately 250% in job postings across 2025–2026. Security and governance are merging at the practitioner level, but the privacy dimension of that merger is undefined.
-2. **The privacy engineer explosion**: The privacy engineer role — the person who translates legal privacy obligation into technical control — is emerging as the missing link between legal privacy and technical implementation. No formal role taxonomy exists for the privacy engineer in the SOC+GRC context.
-3. **Regulatory accountability hardening**: GDPR Article 5(2) (accountability), Article 24 (controller responsibility), Article 33 (breach notification), NIST CSF 2.0's explicit GOVERN function, ISO 27001:2022 A.5.2/A.5.3 (roles and segregation of duties), and DORA's accountability articles all converge on the same requirement: someone must be able to prove, on demand, who owns what, and that the ownership was exercised. Diffuse ownership cannot satisfy that requirement.
+1. **Role convergence in security and GRC**: The "security GRC engineer" and "GRC analyst" hybrid roles have grown approximately 250% in job postings across 2025 and 2026. Security and governance are merging at the practitioner level, but the privacy dimension of that merger is undefined.
+2. **The privacy engineer explosion**: The privacy engineer role, the person who translates legal privacy obligation into technical control, is emerging as the missing link between legal privacy and technical implementation. No formal role taxonomy exists for the privacy engineer in the SOC and GRC context.
+3. **Regulatory accountability hardening**: GDPR Article 5(2) (accountability), Article 24 (controller responsibility), Article 33 (breach notification), NIST CSF 2.0's explicit GOVERN function, ISO 27001:2022 A.5.2 and A.5.3 (roles and segregation of duties), and DORA's accountability articles all converge on the same requirement: someone must be able to prove, on demand, who owns what, and that the ownership was exercised. Diffuse ownership cannot satisfy that requirement.
 4. **The shadow AI explosion**: 80% of enterprise employees report using AI tools not approved by IT. 61% of organizations have not completed an AI systems inventory. 247 days is the average time to detect a shadow AI-related data breach. The $670,000 premium on breach costs when shadow AI data handling is involved is now documented by IBM. The EU AI Act's full enforcement began August 2026. The regulatory collision surface is expanding faster than governance can respond.
-5. **The born-rotten exception problem**: Every exception in this series — from the governance exceptions of Paper 8 to the privacy obligations of Paper 11 — has shared one property: it was registered. A human made a decision, signed a form, and created a record. The decay we have been measuring is the decay of that record's relationship to operational reality. Shadow AI processing exceptions are categorically different. They are never registered. They arrive with EDS = 0 because they were never registered. There is no creation event. There is no decay timeline. There is only a moment of data transfer — irreversible in milliseconds — and the governance gap that began when the data left.
+5. **The born-rotten exception problem**: Every exception in this series, from the governance exceptions of Paper 8 to the privacy obligations of Paper 11, has shared one property: it was registered. A human made a decision, signed a form, and created a record. The decay we have been measuring is the decay of that record's relationship to operational reality. Shadow AI processing exceptions are categorically different. They are never registered. They arrive with complete decay because they were never registered. There is no creation event. There is no decay timeline. There is only a moment of data transfer, irreversible in milliseconds, and the governance gap that began when the data left.
 
 ### 1.4 Research Questions
 - **RQ1**: What is the structural architecture of privacy risk ownership across the DPO, SOC, and GRC roles?
 - **RQ2**: Where does ownership decay, and how can it be measured?
 - **RQ3**: Why does RACI fail for privacy, and what replaces it?
-- **RQ4**: What is the Privacy Engineer, and where does it sit in the org?
+- **RQ4**: What is the Privacy Engineer, and where does it sit in the organization?
 - **RQ5**: How can ownership decay be detected empirically using existing telemetry?
 - **RQ6**: What is the Unsanctioned Processing Exception, and why is it a new risk class?
 - **RQ7**: How can shadow AI processing be measured, detected, and governed when it is unregistered by design?
@@ -131,48 +131,48 @@ Five converging trends make this the correct moment for this research:
 ## 2. Background and Related Work
 
 ### 2.1 The ELDM Series Context
-This paper represents Papers 11 and 12 in a series built on the Exception Lifecycle Decay Model (ELDM). The ELDM posits that security exceptions — and by extension, security obligations — decay through four drift vectors:
+This paper represents Papers 11 and 12 in a series built on the Exception Lifecycle Decay Model (ELDM). The ELDM posits that security exceptions, and by extension security obligations, decay through four drift vectors:
 - **Scope Drift**: The exception's boundary expands beyond its original grant.
 - **Temporal Drift**: The exception outlives its review date.
 - **Ownership Drift**: The owner changes, leaves, or forgets.
 - **Detection Drift**: The monitoring that was supposed to catch misuse stops working.
 
-This paper goes deeper on Ownership Drift — the least-studied of the four — and shows that privacy is where it hurts most, because privacy obligations are legally non-transferable. A SOC cannot delegate GDPR accountability to the DPO. A GRC exception cannot absorb it. The obligation sits with the controller, and the controller is a legal fiction staffed by three roles who don't share a system of record.
+This paper goes deeper on Ownership Drift, the least-studied of the four, and shows that privacy is where it hurts most, because privacy obligations are legally non-transferable. A SOC cannot delegate GDPR accountability to the DPO. A GRC exception cannot absorb it. The obligation sits with the controller, and the controller is a legal fiction staffed by three roles who do not share a system of record.
 
 ### 2.2 Prior Work on Role Separation
 - **Segregation of Duties (SoD)**: The principle that no single role should control an entire critical process (ISO 27001:2022 A.5.3).
-- **Three Lines of Defense (3LoD)**: The management/risk/audit model. In privacy, 3LoD maps imperfectly: the DPO is often "line 2" but has legal independence requirements that break standard line hierarchy.
+- **Three Lines of Defense (3LoD)**: The management, risk, and audit model. In privacy, 3LoD maps imperfectly: the DPO is often line two but has legal independence requirements that break standard line hierarchy.
 - **RACI**: Responsible, Accountable, Consulted, Informed. The default org-chart-to-process mapping, which structurally fails for multi-system privacy operations.
 
 ### 2.3 Prior Work on Privacy Operations & Shadow AI
 - **Privacy by Design (Cavoukian)**: Engineering privacy into architecture rather than retrofitting controls.
 - **Privacy Enhancing Technologies (PETs)**: Differential privacy, homomorphic encryption, SMPC, TEEs.
-- **Shadow AI Risk (IBM/Microsoft 2025-2026)**: Documented 80% shadow AI adoption, $670,000 breach cost premiums, and EU AI Act enforcement mechanics.
+- **Shadow AI Risk (IBM and Microsoft 2025-2026)**: Documented 80% shadow AI adoption, $670,000 breach cost premiums, and EU AI Act enforcement mechanics.
 
 ---
 
 ## 3. The Three Roles: Deep Role-Theoretic Analysis
 
 ### 3.1 The DPO / Privacy Officer
-- **Mandate**: GDPR Articles 37–39 (lawfulness, RoPA maintenance under Art. 30, DPIAs under Art. 35, DPA execution under Art. 28, breach notifications under Art. 33/34). Independent authority.
-- **System of Record**: Privacy Management Platforms (PMPs like OneTrust, BigID). Contains declared state.
-- **Definition of "Done"**: *"The register is accurate and the DPIA is signed."*
+- **Mandate**: GDPR Articles 37 to 39 (lawfulness, RoPA maintenance under Art. 30, DPIAs under Art. 35, DPA execution under Art. 28, breach notifications under Art. 33 and 34). Independent authority.
+- **System of Record**: Privacy Management Platforms (PMPs like OneTrust and BigID). Contains declared state.
+- **Definition of "Done"**: "The register is accurate and the DPIA is signed."
 - **Blind Spot**: Zero visibility into SIEM telemetry or live network flows. Cannot verify if technical controls actually enforce RoPA declarations.
-- **Failure Mode**: **Documentary Drift** — The RoPA describes a system architecture that no longer exists in production.
+- **Failure Mode**: **Documentary Drift** (the RoPA describes a system architecture that no longer exists in production).
 
 ### 3.2 The SOC Analyst / Detection Engineer
 - **Mandate**: Continuous telemetry collection, SIEM alert triage, threat hunting, incident containment, and response playbooks.
-- **System of Record**: SIEM / XDR / EDR (Microsoft Sentinel, Splunk, CrowdStrike). Contains observed state.
-- **Definition of "Done"**: *"The alert fired and the ticket closed."*
+- **System of Record**: SIEM, XDR, EDR (Microsoft Sentinel, Splunk, CrowdStrike). Contains observed state.
+- **Definition of "Done"**: "The alert fired and the ticket closed."
 - **Blind Spot**: Zero visibility into legal basis, DPA status, or Article 9 special-category data classifications.
-- **Failure Mode**: **Context-Free Triage** — Closing outbound network alerts as "benign transfers" without realizing the recipient vendor's DPA expired or that unindexed PII was included.
+- **Failure Mode**: **Context-Free Triage** (closing outbound network alerts as benign transfers without realizing the recipient vendor's DPA expired or that unindexed PII was included).
 
 ### 3.3 The GRC Officer / Auditor
 - **Mandate**: Control testing, risk register management, exception tracking, audit evidence collection, compliance reporting (ISO 27001, SOC 2, NIST CSF).
 - **System of Record**: GRC Platforms (ServiceNow GRC, LogicGate, Archer). Contains attested state.
-- **Definition of "Done"**: *"The control is tested and the exception is documented."*
+- **Definition of "Done"**: "The control is tested and the exception is documented."
 - **Blind Spot**: Tests documentation artifacts rather than live system behavior; assumes audit evidence equals continuous control operation.
-- **Failure Mode**: **Evidence Decay** — Control tests pass based on historical documentation while underlying technical enforcement has silently broken in production.
+- **Failure Mode**: **Evidence Decay** (control tests pass based on historical documentation while underlying technical enforcement has silently broken in production).
 
 ### 3.4 Deep Comparison Matrix
 
@@ -192,11 +192,11 @@ This paper goes deeper on Ownership Drift — the least-studied of the four — 
 
 ### 4.1 The Five Structural Barriers
 
-1. **Barrier 1: No Shared System of Record** — The DPO's PMP has a `processing_activity_id`. The SOC's SIEM has a `source_ip`. The GRC tool has a `control_id`. No foreign keys exist to join these datasets.
-2. **Barrier 2: No Shared Vocabulary** — The DPO says "processing activity," the SOC says "data flow," and GRC says "control objective." Vocabulary mismatches lead to complete operational silos.
-3. **Barrier 3: No Shared Definition of "Done"** — A signed RoPA register does not ensure an alert rule exists; a closed SIEM ticket does not mean legal compliance was verified; a passed audit test does not mean production data is safe.
-4. **Barrier 4: No Shared Time Horizon** — The SOC operates on 15-minute alert SLAs. The DPO operates on 72-hour breach clocks and annual RoPA reviews. GRC operates on annual audit cycles.
-5. **Barrier 5: No Shared Incentive** — SOC analysts are measured on MTTR/ticket closure rates. DPOs are measured on regulatory audit results. GRC officers are measured on clean compliance reports.
+1. **Barrier 1: No Shared System of Record**: The DPO's PMP has a processing activity identifier. The SOC's SIEM has a source IP address. The GRC tool has a control identifier. No foreign keys exist to join these datasets.
+2. **Barrier 2: No Shared Vocabulary**: The DPO says processing activity, the SOC says data flow, and GRC says control objective. Vocabulary mismatches lead to complete operational silos.
+3. **Barrier 3: No Shared Definition of "Done"**: A signed RoPA register does not ensure an alert rule exists; a closed SIEM ticket does not mean legal compliance was verified; a passed audit test does not mean production data is safe.
+4. **Barrier 4: No Shared Time Horizon**: The SOC operates on 15-minute alert SLAs. The DPO operates on 72-hour breach clocks and annual RoPA reviews. GRC operates on annual audit cycles.
+5. **Barrier 5: No Shared Incentive**: SOC analysts are measured on MTTR and ticket closure rates. DPOs are measured on regulatory audit results. GRC officers are measured on clean compliance reports.
 
 ```mermaid
 graph TD
@@ -248,28 +248,21 @@ The Role-Responsibility Matrix (RRM) maps 26 core privacy obligations across rol
 | **Shadow AI detection** | EU AI Act Art. 26| S | **P** | S | SIEM rule, CASB log | No (Shared) |
 | **UPE registration** | GDPR Art. 30 / EU AI| **P** | S | **P** | UPE register, AOC log | No (Shared) |
 
-**Single-Point-of-Ownership Risk (SPOR) Metric**:
-$$\text{SPOR} = \frac{\text{Single-Owner Obligations}}{\text{Total Obligations}} = \frac{14}{26} \approx 0.538 \quad (53.8\%)$$
-
-Over 53% of privacy obligations rely on a single primary owner (the DPO), who lacks the operational telemetry to verify their production enforcement.
+**Single-Point-of-Ownership Risk Metric**:
+Single-Point-of-Ownership Risk equals single-owner obligations divided by total obligations, which is 14 divided by 26, equal to 53.8%. Over 53% of privacy obligations rely on a single primary owner (the DPO), who lacks the operational telemetry to verify their production enforcement.
 
 ---
 
 ## 6. The Ownership Decay Score (ODS)
 
-To track the rot of privacy ownership across time, we formalize the **Ownership Decay Score (ODS)**.
+To track the rot of privacy ownership across time, we formalize the Ownership Decay Score (ODS) as a multiplicative composite index of four operational decay factors:
 
-### 6.1 Formula & Factor Definitions
+1. **Single-Owner Factor**: Evaluated as the inverse of primary role owners (1.0 for single owner, 0.5 for two owners, 0.33 for three owners).
+2. **Transfer Factor**: Indicates unvalidated ownership handoffs (1.0 if role transfer occurred without re-validation, 0.0 if continuous).
+3. **Visibility Factor**: Measures telemetry gaps (1.0 minus visibility percentage divided by 100).
+4. **Tenure Factor**: Time elapsed since last formal attestation normalized to a 5-day SLA.
 
-$$ODS(o, t) = Single(o) \times Transfer(o, t) \times Visibility(o, t) \times Tenure(o, t)$$
-
-Where:
-- **$Single(o)$**: Single-owner penalty factor. Calculated as $Single(o) = \frac{1}{N_{owners}}$. If 1 role owns the obligation, $Single = 1.0$; if 2 roles, $0.5$; if 3 roles, $0.33$.
-- **$Transfer(o, t)$**: Unvalidated ownership handoff flag. $1.0$ if role transfer occurred without formal re-validation; $0.0$ if continuous or re-validated.
-- **$Visibility(o, t)$**: Owner telemetry gap. Calculated as $1 - \frac{\text{VisibilityScore}}{100}$. If the owner has zero live telemetry access, $Visibility = 1.0$.
-- **$Tenure(o, t)$**: Time elapsed since last formal attestation, normalized to a 5-day SLA: $Tenure = \min\left(1.0, \frac{t - t_{last\_attest}}{5 \text{ days}}\right)$.
-
-### 6.2 ODS Risk Spectrum
+### 6.1 ODS Risk Spectrum
 
 | ODS Range | Risk Level | Operational Meaning |
 | :--- | :--- | :--- |
@@ -283,7 +276,7 @@ Where:
 
 ## 7. Attested Ownership Chains (AOC): RACI Is Dead
 
-RACI charts fail in privacy operations because they assume a single system of record. We replace RACI with **Attested Ownership Chains (AOC)**—cryptographically verifiable, multi-role chain-of-custody logs.
+RACI charts fail in privacy operations because they assume a single system of record. We replace RACI with Attested Ownership Chains (AOC), cryptographically verifiable, multi-role chain-of-custody logs.
 
 ```json
 {
@@ -324,7 +317,7 @@ RACI charts fail in privacy operations because they assume a single system of re
 
 ## 8. The Privacy Engineer: The Missing Fourth Vertex
 
-To bridge the structural void between DPO, SOC, and GRC, we define the **Privacy Engineer** as the fourth vertex.
+To bridge the structural void between DPO, SOC, and GRC, we define the Privacy Engineer as the fourth vertex.
 
 ```mermaid
 graph TB
@@ -343,7 +336,7 @@ graph TB
 ```
 
 ### Organizational Reporting Recommendation
-The Privacy Engineer should be **matrixed**: solid line reporting to the CISO (for telemetry access and security pipeline integration) with dotted line reporting to the DPO (for legal mandate alignment and regulatory context).
+The Privacy Engineer should be matrixed: solid line reporting to the CISO (for telemetry access and security pipeline integration) with dotted line reporting to the DPO (for legal mandate alignment and regulatory context).
 
 ---
 
@@ -351,7 +344,7 @@ The Privacy Engineer should be **matrixed**: solid line reporting to the CISO (f
 
 ## 9. Why Shadow AI Is a New Risk Class
 
-Shadow AI processing creates **Unsanctioned Processing Exceptions (UPE)** that differ fundamentally from traditional security exceptions:
+Shadow AI processing creates Unsanctioned Processing Exceptions (UPE) that differ fundamentally from traditional security exceptions:
 1. **Never Registered**: They are created without ticket filing, DPIA review, or risk sign-off.
 2. **Zero Reversibility**: Once customer PII is submitted to a consumer AI model that trains on prompts, the data cannot be un-sent, deleted, or recalled.
 3. **Instantaneous Dwell Time**: The technical breach occurs in milliseconds, long before traditional SIEM or audit tools generate findings.
@@ -378,7 +371,7 @@ graph TD
     style AutoGRC fill:#064E3B,stroke:#34D399,color:#F8FAFC,stroke-width:2px
 ```
 
-1. **Class 1: Paste-to-Prompt**: Direct copying of sensitive payloads (source code, customer logs, medical records) into public LLM web interfaces (e.g., ChatGPT, Claude free tier).
+1. **Class 1: Paste-to-Prompt**: Direct copying of sensitive payloads (source code, customer logs, medical records) into public LLM web interfaces (for example, ChatGPT and Claude free tier).
 2. **Class 2: AI Notetaker Integration**: Unsanctioned SaaS bots (Otter.ai, Fireflies.ai) joining internal video calls and processing audio streams containing special-category PII.
 3. **Class 3: OAuth Browser Extensions**: Third-party browser extensions reading DOM elements, form inputs, and authorization headers on corporate web apps.
 4. **Class 4: Agentic / MCP Workflows**: Autonomous AI agents (LangChain, AutoGPT, Model Context Protocol servers) executing unmonitored local ETL jobs across production S3 buckets or SQL databases.
@@ -387,37 +380,25 @@ graph TD
 
 ## 11. The Privacy Exception Decay Score (PEDS)
 
-To measure UPE health across shadow processing events, we establish the **Privacy Exception Decay Score (PEDS)**:
+To measure UPE health across shadow processing events, we establish the Privacy Exception Decay Score (PEDS) as a product of four binary or ratio factors:
+- **Registration Factor**: 1.0 if registered in RoPA/GRC, 0.0 if unregistered shadow processing.
+- **Technical Reversibility Factor**: 1.0 if data can be purged, 0.0 if data is ingested into an external AI model training set.
+- **Inventory Coverage Factor**: 1.0 if asset is managed in CMDB, 0.0 if unmanaged.
+- **Article-Collision Multiplier**: 1.0 if standard data, 0.0 if special-category PII under GDPR Article 9 or EU AI Act High Risk.
 
-$$PEDS(u, t) = Reg(u) \times Rev(u, t) \times Inv(u, t) \times Art(u)$$
-
-Where:
-- **$Reg(u)$**: Registration factor ($1.0$ if registered in RoPA/GRC; $0.0$ if shadow/unregistered).
-- **$Rev(u, t)$**: Technical reversibility factor ($1.0$ if data can be purged/remediated; $0.0$ if data ingested into external AI training set).
-- **$Inv(u, t)$**: Inventory coverage factor ($1.0$ if endpoint/asset in CMDB; $0.0$ if unmanaged).
-- **$Art(u)$**: Article-collision multiplier ($1.0$ if standard data; $0.0$ if special-category PII under GDPR Art. 9 / EU AI Act High Risk).
-
-**Core Finding**: For every unsanctioned consumer AI tool currently used in enterprises:
-$$PEDS(u,t) = 0 \times 0 \times 0 \times 0 = 0$$
-A PEDS score of **0** indicates a born-rotten exception requiring immediate automated containment.
+For every unsanctioned consumer AI tool currently used in enterprises, the product of these factors evaluates to zero, representing a born-rotten exception requiring immediate automated containment.
 
 ---
 
 ## 12. Compliance Debt Extension for UPEs
 
-We extend the baseline Compliance Debt ($CD$) formula to incorporate the financial and regulatory exposure generated by Unsanctioned Processing Exceptions:
-
-$$CD_{total} = CD_{base} + \sum_{k=1}^{M} \left( V_e(k) \times S_d(k) \times \Phi_{reg}(k) \right)$$
-
-Where $V_e(k)$ is the data volume of UPE $k$, $S_d(k)$ is the data sensitivity index, and $\Phi_{reg}(k)$ is the maximum statutory fine multiplier under GDPR Art. 83 (up to 4% global turnover) or EU AI Act Art. 99.
+We extend the baseline Compliance Debt formula to incorporate the financial and regulatory exposure generated by Unsanctioned Processing Exceptions. Total Compliance Debt combines registered policy debt with the accumulated product of unmanaged data volume, data sensitivity, and maximum statutory fine multipliers under GDPR Article 83 (up to 4% global turnover) or EU AI Act Article 99.
 
 ---
 
 ## 13. The Shadow AI Exposure Index (SAEI)
 
-The **Shadow AI Exposure Index (SAEI)** provides CISOs and DPOs with a board-presentable metric:
-
-$$SAEI = \frac{\sum_{i=1}^{N} \text{Unsanctioned AI Requests}_i \times \text{PII Weight}_i}{\text{Total Enterprise API Volume}} \times 100$$
+The Shadow AI Exposure Index (SAEI) provides CISOs and DPOs with a board-presentable metric: the percentage ratio of weighted unsanctioned AI PII request volume relative to total enterprise API traffic volume.
 
 ---
 
@@ -510,12 +491,12 @@ ORDER BY tenure_decay_factor DESC;
 ### 16.1 Case Study A: The Healthcare AI Prompt Breach
 An engineer pasted 4,500 unanonymized patient intake records into a free-tier consumer AI assistant to build a classification prototype. The SOC closed the egress alert as routine HTTPS traffic. The DPO learned of the exposure 4 months later when the vendor published model updates reproducing snippet data. 
 
-*Result*: $PEDS = 0$, $ODS = 0.95$, resulting in a €2.4M regulatory penalty under GDPR Art. 83 due to unnotified Article 9 special-category processing.
+Result: PEDS evaluates to zero, ODS evaluates to critical 0.95, resulting in a 2.4 million Euro regulatory penalty under GDPR Article 83 due to unnotified Article 9 special-category processing.
 
 ### 16.2 Case Study B: The Unsanctioned AI Notetaker
 A product manager invited an unapproved AI transcription bot to executive strategy calls. The bot recorded M&A discussions and customer names, storing transcripts on an unencrypted third-party cloud. 
 
-*Result*: $PEDS = 0$, triggering DORA and ISO 27001 non-compliance findings during external audit.
+Result: PEDS evaluates to zero, triggering DORA and ISO 27001 non-compliance findings during external audit.
 
 ---
 
@@ -546,10 +527,10 @@ sequenceDiagram
 
 ### Consolidated Accountability Dashboard Components
 
-1. **Portfolio ODS Score**: Aggregate decay score across all registered privacy obligations. Target: $< 0.20$.
-2. **Active UPE Count & SAEI Index**: Total active shadow AI data pipelines detected in the last 30 days. Target: $0$.
-3. **AOC Completeness Ratio**: Percentage of privacy obligations with signed DPO + SOC + GRC attestations. Target: $100\%$.
-4. **72-Hour SLA Adherence Rate**: Percentage of PII egress alerts reviewed by DPO within statutory window. Target: $> 98\%$.
+1. **Portfolio ODS Score**: Aggregate decay score across all registered privacy obligations (target: below 0.20).
+2. **Active UPE Count & SAEI Index**: Total active shadow AI data pipelines detected in the last 30 days (target: 0).
+3. **AOC Completeness Ratio**: Percentage of privacy obligations with signed DPO, SOC, and GRC attestations (target: 100%).
+4. **72-Hour SLA Adherence Rate**: Percentage of PII egress alerts reviewed by DPO within statutory window (target: above 98%).
 
 ---
 
@@ -581,7 +562,7 @@ gantt
 
 ## 21. Future Research Agenda
 
-- Empirical measurement of $ODS$ decay rates across Fortune 500 enterprise environments.
+- Empirical measurement of ODS decay rates across Fortune 500 enterprise environments.
 - Developing automated PET enforcement gates directly within Kubernetes CI/CD deployment controllers.
 
 ---
