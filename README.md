@@ -112,26 +112,30 @@ Formalizes the 4-Channel Closed Loop architecture (Risk Register Delta, Detectio
 Expands the Privacy Triad into a 2026 Privacy Governance Lattice. Details multi-jurisdictional compliance (GDPR, CCPA/CPRA, LGPD, PIPL, DPDP, POPIA), Privacy-Enhancing Technologies ($PET(o,t)$ formula), AI inference inventory & agentic risk surfaces, real-world case law post-mortems (Twitter, HSE, Capita, WUSPI), automated classification-to-notification SOAR pipelines, and board metrics ($PCR$, $AIIC$).
 
 ### 12. [27-09-2026: The Privacy Governance Triad and the Unsanctioned Processing Exception](./On%2027-09-2026%20THE%20PRIVACY%20GOVERNANCE%20TRIAD%20AND%20THE%20UNSANCTIONED%20PROCESSING%20EXCEPTION.md)
-Formalizes Unsanctioned Processing Exceptions (UPE), introducing the **Unsanctioned Processing Score ($UPS$)** and **Shadow Risk Index ($SRI$)**, with SIEM detection queries (KQL/SPL), Python PrivOps Risk Engine, closed-loop SOAR workflows, and compliance mappings (GDPR, CCPA, ISO 27701, DORA).
+Formalizes diffuse ownership across DPO, SOC, and GRC functions. Introduces the Role-Responsibility Matrix (RRM), Ownership Decay Score ($ODS$), Attested Ownership Chains (AOC), and the Privacy Engineer role. Defines Unsanctioned Processing Exceptions (UPE) across 4 shadow AI classes, formalizing the Privacy Exception Decay Score ($PEDS$), Shadow AI Exposure Index ($SAEI$), production detection queries (KQL/SPL/SQL), and closed-loop SOAR playbooks.
 
 ---
 
 ## Core Analytical & Governance Formulas
 
-### 1. Unsanctioned Processing Score ($UPS$)
-$$UPS(p,t) = \frac{S_d(p) \times V_e(p,t) \times T_d(p,t)}{L_c(p) \times P_l(p)}$$
+### 1. Ownership Decay Score ($ODS$)
+$$ODS(o,t) = Single(o) \times Transfer(o,t) \times Visibility(o,t) \times Tenure(o,t)$$
 
-### 2. Loop Integrity Score ($LIS$)
+### 2. Privacy Exception Decay Score ($PEDS$)
+$$PEDS(u,t) = Reg(u) \times Rev(u,t) \times Inv(u,t) \times Art(u)$$
+
+### 3. Single-Point-of-Ownership Risk ($SPOR$)
+$$SPOR = \frac{\text{Single-Owner Obligations}}{\text{Total Obligations}} = \frac{14}{26} \approx 0.538$$
+
+### 4. Shadow AI Exposure Index ($SAEI$)
+$$SAEI = \frac{\sum_{i=1}^{N} \text{Unsanctioned AI Requests}_i \times \text{PII Weight}_i}{\text{Total Enterprise API Volume}} \times 100$$
+
+### 5. Loop Integrity Score ($LIS$)
 $$LIS = \frac{\prod_{i=1}^{4} C_i}{N} = \frac{C_1 \times C_2 \times C_3 \times C_4}{N}$$
 
-### 3. Exception Decay Score ($EDS$)
+### 6. Exception Decay Score ($EDS$)
 $$EDS(e,t) = SIR(e,t) \times AL_n(e,t) \times CC(e,t) \times CL(e,t)$$
 
-### 4. Ownership Decay Score with PET Component ($ODS$)
-$$ODS(o,t) = Single(o) \times Transfer(o,t) \times Visibility(o,t) \times Tenure(o,t) \times PET(o,t)$$
-
-### 5. Compliance Debt ($CD$)
-$$CD = \sum \left( V_i \times P_i \times T_i \right) \times \Omega_{bypass}$$
 
 ---
 
