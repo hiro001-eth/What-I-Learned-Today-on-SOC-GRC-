@@ -116,29 +116,6 @@ Formalizes diffuse ownership across DPO, SOC, and GRC functions. Introduces the 
 
 ---
 
-## Core Analytical & Governance Formulas
-
-### 1. Ownership Decay Score ($ODS$)
-$$ODS(o,t) = Single(o) \times Transfer(o,t) \times Visibility(o,t) \times Tenure(o,t)$$
-
-### 2. Privacy Exception Decay Score ($PEDS$)
-$$PEDS(u,t) = Reg(u) \times Rev(u,t) \times Inv(u,t) \times Art(u)$$
-
-### 3. Single-Point-of-Ownership Risk ($SPOR$)
-$$SPOR = \frac{\text{Single-Owner Obligations}}{\text{Total Obligations}} = \frac{14}{26} \approx 0.538$$
-
-### 4. Shadow AI Exposure Index ($SAEI$)
-$$SAEI = \frac{\sum_{i=1}^{N} \text{Unsanctioned AI Requests}_i \times \text{PII Weight}_i}{\text{Total Enterprise API Volume}} \times 100$$
-
-### 5. Loop Integrity Score ($LIS$)
-$$LIS = \frac{\prod_{i=1}^{4} C_i}{N} = \frac{C_1 \times C_2 \times C_3 \times C_4}{N}$$
-
-### 6. Exception Decay Score ($EDS$)
-$$EDS(e,t) = SIR(e,t) \times AL_n(e,t) \times CC(e,t) \times CL(e,t)$$
-
-
----
-
 ## Series Changelog
 
 | Date | Paper | Version | Notes |
@@ -160,7 +137,7 @@ $$EDS(e,t) = SIR(e,t) \times AL_n(e,t) \times CC(e,t) \times CL(e,t)$$
 
 ## About the Author
 
-**hiro001-eth** (Manjil Katuwal) researches the operational intersection of Security Operations, Privacy Engineering, and Governance, Risk, and Compliance. The focus is on what actually happens when these departments don't share data, models, or vocabulary: controls that degrade silently, exceptions that outlive their authorization, and incidents that were structurally predictable months before they happened.
+**I, ME, & MYSELF** (Manjil Katuwal) researched the operational intersection of Security Operations, Privacy Engineering, and Governance, Risk, and Compliance. The focus is on what actually happens when these departments don't share data, models, or vocabulary: controls that degrade silently, exceptions that outlive their authorization, and incidents that were structurally predictable months before they happened.
 
 ---
 
