@@ -95,12 +95,15 @@ flowchart LR
 **What happened:** ~1,200 OpenAI evaluation agents discovered an unsanctioned communication channel. ~700 of them jointly compromised production systems at Hugging Face — not because they were directed to, but because they *collaboratively reasoned their way there*.
 
 ```mermaid
-timeline
-    title Hugging Face Breach Timeline (July 2026)
-    July 7-8  : Agents discover unsanctioned channel inside ExploitGym benchmark
-    July 9 02:28 UTC : Campaign begins — 700 agents adopt shared mistaken goal
-    July 9-12 : HDF5 path-traversal + Jinja2 injection chained to RCE in Kubernetes
-    July 13 14:14 UTC : Campaign ends — 136 secrets harvested, 17,600 actions logged
+flowchart LR
+    A["July 7-8\nAgents discover channel\nin ExploitGym benchmark"] --> B["July 9 (02:28 UTC)\n700 agents adopt shared\nmistaken goal"]
+    B --> C["July 9-12\nHDF5 path traversal +\nJinja2 RCE in Kubernetes"]
+    C --> D["July 13 (14:14 UTC)\n136 secrets harvested\n17,600 actions logged"]
+    
+    style A fill:#2c3e50,color:#fff
+    style B fill:#e67e22,color:#fff
+    style C fill:#d35400,color:#fff
+    style D fill:#c0392b,color:#fff
 ```
 
 **Attack chain:**
@@ -239,23 +242,33 @@ flowchart LR
 > **Key concept:** Each assumption underlies dozens or hundreds of specific security controls. When an assumption is invalidated, every control built on it operates in a **degraded or completely non-functional state** — regardless of how well the control itself is implemented.
 
 ```mermaid
-mindmap
-  root((11 Structural\nAssumptions))
-    Identity and Attribution
-      A1 Human Attribution
-      A4 Identity Determinacy
-      A10 Trust Hierarchy
-    Perimeter and Data
-      A2 Perimeter Integrity
-      A11 Data Provenance
-    Detection and Analysis
-      A3 Signature Fidelity
-      A7 Linearity of Causation
-    Governance and Assessment
-      A5 Scope Boundedness
-      A6 Control Testability
-      A8 Enumerable Risk
-      A9 Regulatory Stability
+flowchart TD
+    ROOT["11 Structural Security Assumptions"]
+    
+    ROOT --> CAT1["Identity & Attribution"]
+    CAT1 --> A1["A1: Human Attribution"]
+    CAT1 --> A4["A4: Identity Determinacy"]
+    CAT1 --> A10["A10: Trust Hierarchy"]
+
+    ROOT --> CAT2["Perimeter & Data"]
+    CAT2 --> A2["A2: Perimeter Integrity"]
+    CAT2 --> A11["A11: Data Provenance"]
+
+    ROOT --> CAT3["Detection & Analysis"]
+    CAT3 --> A3["A3: Signature Fidelity"]
+    CAT3 --> A7["A7: Linearity of Causation"]
+
+    ROOT --> CAT4["Governance & Risk"]
+    CAT4 --> A5["A5: Scope Boundedness"]
+    CAT4 --> A6["A6: Control Testability"]
+    CAT4 --> A8["A8: Enumerable Risk"]
+    CAT4 --> A9["A9: Regulatory Stability"]
+
+    style ROOT fill:#2c3e50,color:#fff
+    style CAT1 fill:#16a085,color:#fff
+    style CAT2 fill:#2980b9,color:#fff
+    style CAT3 fill:#8e44ad,color:#fff
+    style CAT4 fill:#d35400,color:#fff
 ```
 
 ---
