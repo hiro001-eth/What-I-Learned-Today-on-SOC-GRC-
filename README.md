@@ -43,18 +43,18 @@ This diagram illustrates how my research evolved step by step, moving from low-l
 
 ```mermaid
 graph TD
-    AUG18["Paper 1: Aug 18, 2026<br/>SOC Phishing & Email Header Analysis"] --> AUG19["Paper 2: Aug 19, 2026<br/>Governance Failures & Telemetry Blind Spots"]
+    AUG18["Paper 1: Aug 18, 2026<br/>SOC Phishing and Email Header Analysis"] --> AUG19["Paper 2: Aug 19, 2026<br/>Governance Failures and Telemetry Blind Spots"]
     AUG19 --> AUG20["Paper 3: Aug 20, 2026<br/>Cross-Functional Remediation Field Guide"]
     AUG20 --> AUG21["Paper 4: Aug 21, 2026<br/>Cloud Identity Fabric Attack Surfaces"]
-    AUG21 --> SEP01["Paper 5: Sep 01, 2026<br/>Velociraptor Forensic & Detection Framework"]
-    SEP01 --> SEP04["Paper 6: Sep 04, 2026<br/>The Detection Paradox & Signal Decay"]
+    AUG21 --> SEP01["Paper 5: Sep 01, 2026<br/>Velociraptor Forensic and Detection Framework"]
+    SEP01 --> SEP04["Paper 6: Sep 04, 2026<br/>The Detection Paradox and Signal Decay"]
     SEP04 --> SEP07["Paper 7: Sep 07, 2026<br/>The SOC-GRC Entropy Decay Model"]
-    SEP07 --> SEP10["Paper 8: Sep 10, 2026<br/>Risk Acceptance Backdoors & Compliance Debt"]
+    SEP07 --> SEP10["Paper 8: Sep 10, 2026<br/>Risk Acceptance Backdoors and Compliance Debt"]
     SEP10 --> SEP14["Paper 9: Sep 14, 2026<br/>Exception Lifecycle Decay Model (ELDM)"]
     SEP14 --> SEP15["Paper 10: Sep 15, 2026<br/>The IR-GRC Closed Loop Architecture"]
     SEP15 --> SEP25["Paper 11: Sep 25, 2026<br/>Beyond the Triad: Privacy Governance Lattice"]
-    SEP25 --> SEP27["Paper 12: Sep 27, 2026<br/>Privacy Triad & Unsanctioned Processing (UPE)"]
-    SEP27 --> SEP30["Paper 13: Sep 30, 2026<br/>The AI Security Failure Model (SAVS & AEDM)"]
+    SEP25 --> SEP27["Paper 12: Sep 27, 2026<br/>Privacy Triad and Unsanctioned Processing (UPE)"]
+    SEP27 --> SEP30["Paper 13: Sep 30, 2026<br/>The AI Security Failure Model (SAVS and AEDM)"]
     SEP30 --> OCT06["Paper 14: Oct 06, 2026<br/>Third-Party Exception Decay (VEDS Model)"]
     OCT06 --> OCT09["Paper 15: Oct 09, 2026<br/>Authentication Coercion Chains (ACCA Model)"]
 
@@ -106,8 +106,14 @@ flowchart TD
         BLIND["Attacker discovers unmonitored path<br/>Zero alerts triggered in SOC SIEM"]
     end
 
-    EX --> SD & TD & OD & DD
-    SD & TD & OD & DD --> CA
+    EX --> SD
+    EX --> TD
+    EX --> OD
+    EX --> DD
+    SD --> CA
+    TD --> CA
+    OD --> CA
+    DD --> CA
     CA --> BLIND
 
     style EX fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
@@ -128,7 +134,7 @@ The core operational solution across all papers is replacing manual annual revie
 ```mermaid
 flowchart LR
     subgraph SOC_Operations["Security Operations (SOC)"]
-        SIEM["SIEM & EDR Logs"]
+        SIEM["SIEM and EDR Logs"]
         IR["Incident Response Alerts"]
         DH["Detection Heartbeats"]
     end
@@ -139,13 +145,15 @@ flowchart LR
         ROBOT["Automated Exception Revocation"]
     end
 
-    subgraph GRC_Governance["Governance & Compliance (GRC)"]
+    subgraph GRC_Governance["Governance and Compliance (GRC)"]
         REG["Exception Register"]
-        RISK["Risk Matrix & Debt Index"]
+        RISK["Risk Matrix and Debt Index"]
         AUDIT["Audit Evidence Ledger"]
     end
 
-    SIEM & IR & DH -->|Telemetry Delta| LIS
+    SIEM -->|Telemetry Delta| LIS
+    IR -->|Telemetry Delta| LIS
+    DH -->|Telemetry Delta| LIS
     LIS -->|Verification Check| SOAR
     SOAR -->|Revoke Decayed Exceptions| REG
     REG -->|Update Active Rules| SIEM

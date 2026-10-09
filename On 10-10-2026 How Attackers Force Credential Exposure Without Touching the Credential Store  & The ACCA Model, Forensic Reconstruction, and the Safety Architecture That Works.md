@@ -51,22 +51,16 @@ Authentication coercion is not primarily a privilege escalation technique. **It 
 
 ```mermaid
 graph TD
-    subgraph Normal_Flow["Normal Authentication Flow (Expected Trust Direction)"]
-        Client["Client / User"] -->|1. Authenticates Inbound| Server["Protected Server / DC"]
-        Server -->|2. Authorizes Access| Client
+    subgraph Normal_Flow["Normal Authentication Flow - Expected Trust Direction"]
+        Client["Client or User"] -->|"1. Authenticates Inbound"| Server["Protected Server or DC"]
+        Server -->|"2. Authorizes Access"| Client
     end
 
-    subgraph Coerced_Flow["Coerced Authentication Flow (Trust Inversion Attack)"]
-        Attacker["Attacker Endpoint"] -->|1. Sends RPC Trigger Call| DC["Domain Controller / Server"]
-        DC -->|2. Authenticates Outbound (Coerced)| Attacker
-        Attacker -->|3. Relays Machine Credentials| ADCS["AD CS CA / Target Server"]
+    subgraph Coerced_Flow["Coerced Authentication Flow - Trust Inversion Attack"]
+        Attacker["Attacker Endpoint"] -->|"1. Sends RPC Trigger Call"| DC["Domain Controller or Server"]
+        DC -->|"2. Authenticates Outbound - Coerced"| Attacker
+        Attacker -->|"3. Relays Machine Credentials"| ADCS["AD CS CA or Target Server"]
     end
-
-    style Client fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
-    style Server fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style Attacker fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style DC fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style ADCS fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
 ```
 
 In a standard authentication flow, the client proves its identity to the server. The server holds the protected resource. The client acts as the supplicant. Trust flows from client toward server.
@@ -189,17 +183,17 @@ The AD CS HTTP enrollment interface (`certsrv`) accepts NTLM authentication by d
 sequenceDiagram
     autonumber
     participant Attacker as Attacker Listener
-    participant DC as Domain Controller (DC01)
-    participant ADCS as AD CS CA (certsrv)
+    participant DC as Domain Controller DC01
+    participant ADCS as AD CS CA certsrv
     participant KDC as Key Distribution Center
 
-    Attacker->>DC: RPC Coercion Trigger (e.g., MS-RPRN / MS-EFSRPC)
-    DC-->>Attacker: Outbound Machine NTLM Auth (DC01$)
+    Attacker->>DC: RPC Coercion Trigger e.g. MS-RPRN or MS-EFSRPC
+    DC-->>Attacker: Outbound Machine NTLM Auth DC01$
     Attacker->>ADCS: Relays DC01$ NTLM Auth over HTTP
-    ADCS-->>Attacker: Issues X.509 Certificate (Subject: DC01)
+    ADCS-->>Attacker: Issues X.509 Certificate Subject DC01
     Attacker->>KDC: PKINIT Request using DC01 Certificate
     KDC-->>Attacker: Returns High-Privilege TGT for DC01$
-    Attacker->>DC: Executes DCSync (Extracts All Password Hashes)
+    Attacker->>DC: Executes DCSync Extracts Password Hashes
 ```
 
 This full chain (Coercion -> NTLM Relay -> Certificate Issuance -> PKINIT Authentication) bypasses standard NTLM hash-cracking defenses because the NTLM hash is never cracked. It is relayed in real time to obtain a valid, persistent X.509 computer certificate.
@@ -251,13 +245,13 @@ You cannot patch protocol design specifications. You can restrict anonymous acce
 timeline
     title Forensic Execution Timeline of the Coercion Attack Chain
     Day 0 : Initial Access : Contractor VPN logon from novel external IP
-    Day 1 : Passive Recon : LDAP directory queries & DNS SRV enumeration
-    Day 2 : Targeted Recon : Enumerates AD CS HTTP certsrv & RPC endpoints
-    Day 3 : Attack Execution : Coerces DC01$ via MS-RPRN (00:00)
-            : Relays Auth to ADCS HTTP (00:01)
-            : Certificate Issued & PKINIT TGT (00:02)
-            : Full DCSync Complete (00:04)
-    Day 3 - 31 : Dwell & Persistence : Golden Ticket usage, backup staging, exfiltration
+    Day 1 : Passive Recon : LDAP directory queries and DNS SRV enumeration
+    Day 2 : Targeted Recon : Enumerates AD CS HTTP certsrv and RPC endpoints
+    Day 3 : Attack Execution : Coerces DC01$ via MS-RPRN
+            : Relays Auth to ADCS HTTP
+            : Certificate Issued and PKINIT TGT
+            : Full DCSync Complete
+    Day 3 to 31 : Dwell and Persistence : Golden Ticket usage, backup staging, exfiltration
     Day 31 : Ransomware Execution : GPO automated deployment across all endpoints
 ```
 
@@ -472,7 +466,7 @@ graph LR
 
     subgraph Layer2["Layer 2: Relay Mitigation"]
         L2_1["Enable EPA on AD CS"]
-        L2_2["Enforce SMB & LDAP Signing"]
+        L2_2["Enforce SMB and LDAP Signing"]
         L2_3["Restrict Outgoing NTLM on DCs"]
     end
 
@@ -482,18 +476,13 @@ graph LR
         L3_3["Deploy Credential Guard"]
     end
 
-    subgraph Layer4["Layer 4: Detection & Response"]
-        L4_1["Ingest CA Logs (4887)"]
+    subgraph Layer4["Layer 4: Detection and Response"]
+        L4_1["Ingest CA Logs Event 4887"]
         L4_2["Deploy DC Outbound KQL Rules"]
         L4_3["Quarterly EDS Exception Audits"]
     end
 
     Layer1 --> Layer2 --> Layer3 --> Layer4
-
-    style Layer1 fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
-    style Layer2 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style Layer3 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style Layer4 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
 ```
 
 ### 5.1 LAYER-BY-LAYER IMPLEMENTATION
@@ -594,16 +583,6 @@ Defending against authentication coercion requires implementing layered controls
 | Post-Incident Feedback | **Paper 10 (Closed Loop)** | IR findings must automatically update quarterly GRC audit checklists |
 | Vendor Agent Risk | **Paper 14 (VEDS)** | Vendor management agents running as `SYSTEM` create coercion targets |
 | Cloud Identity Coercion | **Paper 4 (Cloud Identity)** | OAuth device code and redirect coercion mirror on-prem trust inversion |
-
----
-
-## ROADMAP: PAPERS 16 TO 20
-
-- **PAPER 16 (NEXT):** *The Cloud Coercion Chain: Token Theft, Device Code Flow, and Signing-Key Forgery in Entra ID*
-- **PAPER 17:** *Shadow Credentials: The Certificate Persistence Chain Post-ADCS Compromise*
-- **PAPER 18:** *The Delegation Decay Chain: Unconstrained to RBCD Abuse Patterns*
-- **PAPER 19:** *The Backup Kill Chain: Why Ransomware Groups Target the Backup Control Plane First*
-- **PAPER 20:** *The Coercion Assurance Program: Operationalizing Continuous Coercion Simulation*
 
 ---
 
