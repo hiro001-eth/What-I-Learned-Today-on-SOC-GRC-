@@ -1,6 +1,3 @@
-Created At: 2026-10-09T18:07:02Z
-Completed At: 2026-10-09T18:07:02Z
-File Path: `file:///home/hiro/Downloads/MY%20SOC%20+%20GRC%20Research%20/On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md`
 
 # THE AUTHENTICATION COERCION CHAIN
 ## How Real Attackers Force Credential Exposure Without Touching the Credential Store: The ACCA Model, Forensic Reconstruction, and the Safety Architecture That Works
