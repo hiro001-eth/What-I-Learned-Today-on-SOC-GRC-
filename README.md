@@ -1,7 +1,7 @@
 # SOC + GRC Operational Research: Attack Chain Architecture & Exception Decay
 
 [![Domain: SOC + GRC Integration](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20Integration-1E293B?style=for-the-badge&logo=shield)](#)
-[![Papers: 14 Published](https://img.shields.io/badge/Papers-14%20Published-7C3AED?style=for-the-badge)](#)
+[![Papers: 15 Published](https://img.shields.io/badge/Papers-15%20Published-7C3AED?style=for-the-badge)](#)
 [![Author: hiro001-eth](https://img.shields.io/badge/Author-hiro001--eth-10B981?style=for-the-badge)](#)
 
 ---
@@ -10,11 +10,11 @@
 
 Security Operations (SOC) and Governance, Risk, and Compliance (GRC) have spent decades operating in isolated silos. SOC analysts focus on alerts, logs, and live threats. GRC specialists focus on policies, risk registers, and compliance audits.
 
-Through fourteen research papers, I set out to prove why this operational disconnect is dangerous. I started with basic email header forensics, climbed through cloud identity abuse and live endpoint hunting, built thermodynamic entropy models for security controls, and uncovered the mechanics of how signed risk exceptions quietly rot into attacker-ready backdoors. 
+Through fifteen research papers, I set out to prove why this operational disconnect is dangerous. I started with basic email header forensics, climbed through cloud identity abuse and live endpoint hunting, built thermodynamic entropy models for security controls, and uncovered the mechanics of how signed risk exceptions quietly rot into attacker-ready backdoors. 
 
-From there, I designed the IR-GRC Closed Loop framework to automate telemetry back-feeding, expanded governance into multi-jurisdictional Privacy Lattice systems, mapped shadow PII data pipelines, built the AI Security Failure Model to address non-deterministic agentic decay, and capped the project by solving the Third-Party Vendor Exception Decay Problem (VEDS).
+From there, I designed the IR-GRC Closed Loop framework to automate telemetry back-feeding, expanded governance into multi-jurisdictional Privacy Lattice systems, mapped shadow PII data pipelines, built the AI Security Failure Model to address non-deterministic agentic decay, solved the Third-Party Vendor Exception Decay Problem (VEDS), and mapped how protocol trust inversion drives the Authentication Coercion Chain Attack (ACCA).
 
-Across fourteen papers, this repository provides unified mathematical decay models ($EDS$, $LIS$, $ODS$, $PEDS$, $SAVS$, $AEDM$, $ALL$, $VEDS$), production detection queries (KQL, SPL, SQL, VQL), automated SOAR containment playbooks, and audit-proof implementation frameworks.
+Across fifteen papers, this repository provides unified mathematical decay models ($EDS$, $LIS$, $ODS$, $PEDS$, $SAVS$, $AEDM$, $ALL$, $VEDS$), production detection queries (KQL, SPL, SQL, VQL), automated SOAR containment playbooks, and audit-proof implementation frameworks.
 
 ---
 
@@ -33,13 +33,13 @@ Each department experiences this decay in a different way:
 * **The Data Protection Officer (DPO)** learns about a data leak long after the 72-hour regulatory notification clock has run out.
 * **The CISO** reports a risk score to the board that no longer reflects real-world operational security.
 
-What security leadership lacked was a single, rigorous framework to model this rotting process and an automated architecture to fix it. That is what I built throughout this fourteen-paper research series.
+What security leadership lacked was a single, rigorous framework to model this rotting process and an automated architecture to fix it. That is what I built throughout this fifteen-paper research series.
 
 ---
 
 ## The Complete Research Map
 
-This diagram illustrates how my research evolved step by step, moving from low-level forensic triage to systemic entropy modeling, automated feedback loops, privacy engineering, AI failure models, and supply chain vendor risk.
+This diagram illustrates how my research evolved step by step, moving from low-level forensic triage to systemic entropy modeling, automated feedback loops, privacy engineering, AI failure models, supply chain vendor risk, and protocol trust inversion coercion chains.
 
 ```mermaid
 graph TD
@@ -56,6 +56,7 @@ graph TD
     SEP25 --> SEP27["Paper 12: Sep 27, 2026<br/>Privacy Triad & Unsanctioned Processing (UPE)"]
     SEP27 --> SEP30["Paper 13: Sep 30, 2026<br/>The AI Security Failure Model (SAVS & AEDM)"]
     SEP30 --> OCT06["Paper 14: Oct 06, 2026<br/>Third-Party Exception Decay (VEDS Model)"]
+    OCT06 --> OCT09["Paper 15: Oct 09, 2026<br/>Authentication Coercion Chains (ACCA Model)"]
 
     classDef foundation fill:#0F172A,stroke:#3B82F6,color:#F8FAFC,stroke-width:2px;
     classDef telemetry fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC,stroke-width:2px;
@@ -74,8 +75,8 @@ graph TD
     class SEP14 breakthrough;
     class SEP15 theoretical;
     class SEP25,SEP27 privacy;
-    class SEP30 critical;
-    class OCT06 latest;
+    class SEP30,OCT06 critical;
+    class OCT09 latest;
 ```
 
 ---
@@ -169,15 +170,15 @@ Different roles require different entry points into this research. Below is a gu
 
 | Role | Recommended Papers | Practical Outcomes & Deliverables |
 | :--- | :--- | :--- |
-| **Tier 1 & Tier 2 SOC Analysts** | [Paper 1](./On%2018-08-2026%20i%20learned%20%20SOC%20Phishing%20&%20Email%20Header%20Analysis%20%20Reference.md), [Paper 8](./ON%2010-09-2026%20-%20RISK%20ACCEPTANCE%20BACKDOORS,%20EXCEPTION%20ATTACK%20TREES,%20AND%20THE%20COMPLIANCE%20DEBT%20METRIC.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md) | SMTP email header triage playbooks, SIEM exclusion verification steps, and recognizing how approved vendor exceptions manifest as unexpected alerts. |
-| **Threat Hunters & Detection Engineers** | [Paper 4](./On%2021-08-2026%20%20Today%20I%20Cover%20The%20Cloud%20Identity%20Fabric%20%20Attack%20Surfaces%20Most%20SOC%20Teams%20Cannot%20Currently%20See.md), [Paper 5](./On%20%2001-09-2026%20VELOCIRAPTOR:%20A%20UNIFIED%20DETECTION-FORENSICS%20FRAMEWORK%20FOR%20SOC%20+%20GRC%20ATTACK%20CHAIN%20RESEARCH.md), [Paper 6](./On%2004-09-2026%20THE%20DETECTION%20PARADOX%20-%20WHY%20THE%20BETTER%20YOUR%20SIEM%20GETS,%20THE%20WORSE%20YOUR%20COVERAGE%20BECOMES.md), [Paper 10](./On%2015-09-2026%20%20The%20IR-GRC%20Closed%20Loop:%20How%20Incident%20Intelligence%20Flows%20Back%20Into%20the%20Exception%20Register%20Before%20the%20Next%20Attacker%20Arrives.md), [Paper 13](./On%2030-09-2026%20The%20AI%20Security%20Failure%20Model:%20Why%20Your%20SOC%20and%20GRC%20Program%20Is%20Operating%20on%20an%20Invalid%20Map.md) | KQL/SPL cloud identity queries, Velociraptor VQL forensic artifacts, detection liveness heartbeat design, and AI agent prompt-drift detection rules. |
-| **GRC Officers & Auditors** | [Paper 2](./On%2019-08-2026%20i%20learned%20When%20Governance%20Fails%20First:%20How%20GRC%20Breakdowns%20Create%20SOC%20Blind%20Spots.md), [Paper 9](./On%2014-09-2026%20-%20THE%20EXCEPTION%20LIFECYCLE%20DECAY%20MODEL%20How%20Accepted%20Risks%20Rot:%20A%20Four%20Drift%20Theory%20of%20GRC%20Exception%20Decay%20and%20Its%20Forensic,%20Detection,%20and%20Audit%20Consequences.md), [Paper 11](./On%2025-09-2026%20BEYOND%20THE%20TRIAD:%20THE%20MISSING%20DIMENSIONS%20A%20Comprehensive%20Research%20Supplement%20to%20%22The%20Privacy%20Governance%20Triad%22.md), [Paper 12](./On%2027-09-2026%20THE%20PRIVACY%20GOVERNANCE%20TRIAD%20AND%20THE%20UNSANCTIONED%20PROCESSING%20EXCEPTION.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md) | Continuous audit procedures, multi-jurisdictional compliance maps (GDPR, CCPA, PIPL, EU AI Act), Attested Ownership Chains (AOC), and vendor exception decay scores. |
+| **Tier 1 & Tier 2 SOC Analysts** | [Paper 1](./On%2018-08-2026%20i%20learned%20%20SOC%20Phishing%20&%20Email%20Header%20Analysis%20%20Reference.md), [Paper 8](./ON%2010-09-2026%20-%20RISK%20ACCEPTANCE%20BACKDOORS,%20EXCEPTION%20ATTACK%20TREES,%20AND%20THE%20COMPLIANCE%20DEBT%20METRIC.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md), [Paper 15](./On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md) | SMTP header triage, SIEM exclusion verification, vendor exception alert triage, and detecting DC outbound coercion telemetry. |
+| **Threat Hunters & Detection Engineers** | [Paper 4](./On%2021-08-2026%20%20Today%20I%20Cover%20The%20Cloud%20Identity%20Fabric%20%20Attack%20Surfaces%20Most%20SOC%20Teams%20Cannot%20Currently%20See.md), [Paper 5](./On%20%2001-09-2026%20VELOCIRAPTOR:%20A%20UNIFIED%20DETECTION-FORENSICS%20FRAMEWORK%20FOR%20SOC%20+%20GRC%20ATTACK%20CHAIN%20RESEARCH.md), [Paper 6](./On%2004-09-2026%20THE%20DETECTION%20PARADOX%20-%20WHY%20THE%20BETTER%20YOUR%20SIEM%20GETS,%20THE%20WORSE%20YOUR%20COVERAGE%20BECOMES.md), [Paper 10](./On%2015-09-2026%20%20The%20IR-GRC%20Closed%20Loop:%20How%20Incident%20Intelligence%20Flows%20Back%20Into%20the%20Exception%20Register%20Before%20the%20Next%20Attacker%20Arrives.md), [Paper 13](./On%2030-09-2026%20The%20AI%20Security%20Failure%20Model:%20Why%20Your%20SOC%20and%20GRC%20Program%20Is%20Operating%20on%20an%20Invalid%20Map.md), [Paper 15](./On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md) | KQL/SPL cloud identity queries, Velociraptor VQL forensic artifacts, detection liveness heartbeats, AI prompt-drift rules, and DC coercion chain correlation queries. |
+| **GRC Officers & Auditors** | [Paper 2](./On%2019-08-2026%20i%20learned%20When%20Governance%20Fails%20First:%20How%20GRC%20Breakdowns%20Create%20SOC%20Blind%20Spots.md), [Paper 9](./On%2014-09-2026%20-%20THE%20EXCEPTION%20LIFECYCLE%20DECAY%20MODEL%20How%20Accepted%20Risks%20Rot:%20A%20Four%20Drift%20Theory%20of%20GRC%20Exception%20Decay%20and%20Its%20Forensic,%20Detection,%20and%20Audit%20Consequences.md), [Paper 11](./On%2025-09-2026%20BEYOND%20THE%20TRIAD:%20THE%20MISSING%20DIMENSIONS%20A%20Comprehensive%20Research%20Supplement%20to%20%22The%20Privacy%20Governance%20Triad%22.md), [Paper 12](./On%2027-09-2026%20THE%20PRIVACY%20GOVERNANCE%20TRIAD%20AND%20THE%20UNSANCTIONED%20PROCESSING%20EXCEPTION.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md), [Paper 15](./On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md) | Continuous audit procedures, multi-jurisdictional compliance maps, vendor exception decay scores, and 7-item quarterly AD CS coercion checklists. |
 | **Privacy Engineers & Architects** | [Paper 11](./On%2025-09-2026%20BEYOND%20THE%20TRIAD:%20THE%20MISSING%20DIMENSIONS%20A%20Comprehensive%20Research%20Supplement%20to%20%22The%20Privacy%20Governance%20Triad%22.md), [Paper 12](./On%2027-09-2026%20THE%20PRIVACY%20GOVERNANCE%20TRIAD%20AND%20THE%20UNSANCTIONED%20PROCESSING%20EXCEPTION.md), [Paper 13](./On%2030-09-2026%20The%20AI%20Security%20Failure%20Model:%20Why%20Your%20SOC%20and%20GRC%20Program%20Is%20Operating%20on%20an%20Invalid%20Map.md) | Privacy-Enhancing Technology (PET) enforcement formulas, automated shadow PII pipeline detectors, PrivOps engine automation, and AI inference data risk inventorying. |
-| **CISOs & Security Executives** | [Paper 7](./On%2007-09-2026%20%20The%20SOC-GRC%20Entropy-Model:%20A%20Unified%20Framework%20for%20Security%20Program%20Decay%20and%20the%20Architecture%20of%20Anti-Fragile%20Detection.md), [Paper 10](./On%2015-09-2026%20%20The%20IR-GRC%20Closed%20Loop:%20How%20Incident%20Intelligence%20Flows%20Back%20Into%20the%20Exception%20Register%20Before%20the%20Next%20Attacker%20Arrives.md), [Paper 13](./On%2030-09-2026%20The%20AI%20Security%20Failure%20Model:%20Why%20Your%20SOC%20and%20GRC%20Program%20Is%20Operating%20on%20an%20Invalid%20Map.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md) | Quantitative security decay metrics ($EDS$, $LIS$, $SAVS$, $VEDS$), C-suite presentation slides, and audit-proof board reporting structures. |
+| **CISOs & Security Executives** | [Paper 7](./On%2007-09-2026%20%20The%20SOC-GRC%20Entropy-Model:%20A%20Unified%20Framework%20for%20Security%20Program%20Decay%20and%20the%20Architecture%20of%20Anti-Fragile%20Detection.md), [Paper 10](./On%2015-09-2026%20%20The%20IR-GRC%20Closed%20Loop:%20How%20Incident%20Intelligence%20Flows%20Back%20Into%20the%20Exception%20Register%20Before%20the%20Next%20Attacker%20Arrives.md), [Paper 13](./On%2030-09-2026%20The%20AI%20Security%20Failure%20Model:%20Why%20Your%20SOC%20and%20GRC%20Program%20Is%20Operating%20on%20an%20Invalid%20Map.md), [Paper 14](./ON%2006-10-2026%20%E2%80%94%20THE%20THIRD%20PARTY%20EXCEPTION%20DECAY%20PROBLEM%20How%20Vendor%20Risk%20Exceptions%20Rot%20Across%20Your%20Supply%20Chain%20The%20VEDS%20Model.md), [Paper 15](./On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md) | Quantitative security decay metrics ($EDS$, $LIS$, $SAVS$, $VEDS$), C-suite presentation slides, and identity trust-inversion defense architectures. |
 
 ---
 
-## Chronological Research Index (Papers 1 to 14)
+## Chronological Research Index (Papers 1 to 15)
 
 ### 1. [18-08-2026: SOC Phishing & Email Header Analysis Reference](./On%2018-08-2026%20i%20learned%20%20SOC%20Phishing%20&%20Email%20Header%20Analysis%20%20Reference.md)
 * **Focus:** Deep technical analysis of SMTP transaction mechanics, hop-by-hop header chain reconstruction, SPF/DKIM/DMARC validation checks, and regex extraction patterns.
@@ -237,31 +238,9 @@ Different roles require different entry points into this research. Below is a gu
   $$VEDS(v, e, t) = VSIR(v,e,t) \times VAL_n(v,e,t) \times VCC(v,e,t) \times VCL(v,e,t) \times CA(v,e,t)$$
 * **Key Learning:** Quantifying vendor exception decay across zero-visibility trust boundaries, incorporating Cascade Amplification ($CA$), continuous audit workflows, and C-suite reporting.
 
----
-
-## Core Mathematical Models & Formulas Reference
-
-Throughout this research series, I developed several mathematical formulas to convert qualitative risk concepts into objective, measurable metrics.
-
-```
-1. Exception Decay Score (ELDM):
-   EDS(e,t) = SIR(e,t) * AL_n(e,t) * CC(e,t) * CL(e,t)
-
-2. Loop Integrity Score (IR-GRC):
-   LIS = (RRD * 0.30) + (DGF * 0.30) + (ECDB * 0.20) + (TPS * 0.20)
-
-3. Ownership Decay Score (Privacy Triad):
-   ODS(o,t) = AOC_v(o,t) * (1 - RRM_g(o,t)) * RACI_a(o,t)
-
-4. Privacy Exception Decay Score (UPE):
-   PEDS(p,t) = PDS(p,t) * LBC(p,t) * DPE(p,t) * ODS(o,t)
-
-5. Structural Assumption Validity Score (AI Failure Model):
-   SAVS(s,t) = C_score(s,t) * M_score(s,t) * S_score(s,t) * T_score(s,t)
-
-6. Vendor Exception Decay Score (VEDS Model):
-   VEDS(v,e,t) = VSIR(v,e,t) * VAL_n(v,e,t) * VCC(v,e,t) * VCL(v,e,t) * CA(v,e,t)
-```
+### 15. [09-10-2026: How Attackers Force Credential Exposure Without Touching the Credential Store: The ACCA Model & Safety Architecture](./On%2010-10-2026%20How%20Attackers%20Force%20Credential%20Exposure%20Without%20Touching%20the%20Credential%20Store%20%20&%20The%20ACCA%20Model,%20Forensic%20Reconstruction,%20and%20the%20Safety%20Architecture%20That%20Works.md)
+* **Focus:** Deep forensic reconstruction of authentication coercion primitives (SpoolSS, PetitPotam, DFSCoerce, ShadowCoerce, CheeseOunce, ADCS ESC8 HTTP relay, OAuth device code flow), exposing the trust-inversion attack model and establishing a 4-layer defense architecture.
+* **Key Learning:** How adversaries invert protocol trust flow from DC to attacker listeners and how to prevent relay paths using EPA, SMB signing, RPC interface netsh filters, and KQL correlation rules.
 
 ---
 
@@ -283,12 +262,13 @@ Throughout this research series, I developed several mathematical formulas to co
 | **27-09-2026** | The Privacy Governance Triad & UPE | 1.0 | $ODS$, $PEDS$, and $SAEI$ formulas, shadow AI detection, PrivOps SOAR schemas. |
 | **30-09-2026** | The AI Security Failure Model | 1.0 | Breakdown of 11 AI assumptions, $SAVS$, $AEDM$, $ALL$ metrics, 20+ Mermaid diagrams. |
 | **06-10-2026** | Third-Party Exception Decay (VEDS Model) | 1.0 | Supply chain extension of exception decay, $VEDS$ formula, Cascade Amplification ($CA$). |
+| **09-10-2026** | Authentication Coercion Chains (ACCA Model) | 2.0 | Catalog of 8 coercion primitives, 4-minute attack timeline, KQL/SPL correlation queries, netsh RPC filters, and 4-layer safety architecture. |
 
 ---
 
 ## About the Author
 
-This research program was conducted entirely by **Manjil Katuwal** (`hiro001-eth`).
+This research program was conducted entirely by **Me-Manjil Katuwal** (`hiro001-eth`).
 
 My core research focus lies at the operational intersection of Security Operations, Privacy Engineering, and Governance, Risk, and Compliance. I explore what happens when these functions fail to share real-time data, models, or operational vocabulary: security controls decay silently, exceptions outlive their authorization, and major incidents become structurally inevitable months before an attacker steps through the door.
 

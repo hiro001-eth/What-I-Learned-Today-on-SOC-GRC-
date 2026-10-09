@@ -1,1483 +1,1912 @@
-# The Third Party Exception Decay Problem
+================================================================================
+ON 06-10-2026 — THE THIRD-PARTY EXCEPTION DECAY PROBLEM
+How Vendor Risk Exceptions Rot Across Your Supply Chain — The VEDS Model
 
-## How Vendor Risk Exceptions Rot Across Your Supply Chain: The VEDS Model
+Author  : hiro001-eth (Manjil Katuwal)
+Series  : What-I-Learned-Today-on-SOC-GRC
+Version : 1.0 (Research Paper)
+Paper   : 14 of the series
+Prereqs : Papers 8 (Backdoors), 9 (ELDM), 10 (IR-GRC Loop), 12 (UPE), 13 (SAVS)
+Date    : 2026-10-06
+================================================================================
 
-**Version:** 1.0  
-**Date:** 2026-10-06  
-**Series:** What-I-Learned-Today-on-SOC-GRC  
-**Author:** hiro001-eth  
-**Series Position:** Paper 14 of the GRC Decay Research Program  
-**Prequel:** [The Exception Lifecycle Decay Model (ELDM)](./On%2014-09-2026%20-%20THE%20EXCEPTION%20LIFECYCLE%20DECAY%20MODEL%20How%20Accepted%20Risks%20Rot:%20A%20Four%20Drift%20Theory%20of%20GRC%20Exception%20Decay%20and%20Its%20Forensic,%20Detection,%20and%20Audit%20Consequences.md)  
-**Classification:** Advanced SOC + GRC Research | Supply Chain Security | Third Party Risk Management | CISO Metrics  
-**Target Audience:** Tier 1-3 SOC Analysts, Third Party Risk Teams, Vendor Security Managers, Detection Engineers, GRC Auditors, CISOs
+--------------------------------------------------------------------------------
+ABSTRACT
+--------------------------------------------------------------------------------
+Every paper in this series has examined exception decay inside one boundary:
+the organization's own governance perimeter. The risk register held the
+exception. The SOC held the detection gap. The GRC officer held the audit
+evidence. The decay happened inside the house.
+
+This paper crosses the boundary.
+
+When your organization accepts a vendor's security posture — their SOC 2 Type II
+certification, their ISO 27001 certificate, their penetration test results, their
+contractual security commitments — you are not receiving security. You are
+receiving an assertion about security at a point in time from an entity whose
+internal decay you cannot observe. That assertion expires. The contract drifts
+from the threat landscape. The certification ages from the controls it certified.
+The telemetry gap widens because you cannot instrument what you do not own.
+
+You are accepting a vendor's exceptions on faith — and those exceptions decay
+by the same four mechanisms the ELDM identified, accelerated by the additional
+variable that you cannot see the decay happening.
+
+We introduce the Vendor Exception Decay Score (VEDS) — an extension of EDS
+(Paper 9) across the third-party boundary. VEDS has five components where EDS
+had four, because vendor exceptions introduce a fifth decay mechanism that does
+not exist for internal exceptions: Trust Opacity, the systematic inability of
+the accepting organization to observe the vendor's actual security posture.
+
+We derive the Vendor Exception Tree (VET) — the attack path model that shows
+how an attacker chains through a vendor's decayed exception into the accepting
+organization, through multiple tiers of the supply chain if the vendor has its
+own vendors. We demonstrate that every EDS = 0 exception in a vendor's estate
+is a potential EDS = 0 exception in your estate, propagated through the trust
+relationship the contract created.
+
+We map VEDS to the three regulatory frameworks that now make vendor decay a
+board-level event: DORA's third-party ICT risk management requirements, NIS2's
+supply chain security obligations, and ISO 27001:2022's substantially expanded
+controls 5.19 through 5.22. We provide the contract language, the audit
+procedure, the SIEM detection queries, and the closed-loop update to the
+IR-GRC channels from Paper 10.
+
+The central claim: your vendor's ELDM score is your risk. You just cannot
+measure it because you are on the wrong side of the boundary. VEDS is the
+formula that makes the invisible decay measurable from the outside.
+
+CENTRAL FORMULA:
+  VEDS(v,t) = CD(v,t) × AD(v,t) × TD(v,t) × OR(v,t) × TO(v,t)
+
+Where VEDS = 1.0 means all five decay mechanisms are healthy for this vendor
+relationship and VEDS = 0.0 means the vendor relationship has decayed to the
+point where it constitutes an active attack surface in the accepting organization's
+supply chain.
+
+Keywords: third-party risk, vendor risk, supply chain security, VEDS, DORA,
+NIS2, ISO 27001:2022, SOC 2, exception decay, attack tree, telemetry gap,
+attestation drift, contract drift, TPRM, vendor exception, fourth-party risk,
+vendor incident, closed loop, IR-GRC, trust opacity
+
+--------------------------------------------------------------------------------
+SECTION 1 — WHY THE BOUNDARY MATTERS AND WHY IT MAKES EVERYTHING WORSE
+--------------------------------------------------------------------------------
+
+1.1 THE ASSUMPTION EVERY PREVIOUS PAPER MADE
+
+Papers 8 through 13 of this series examined security exception decay with one
+implicit assumption: that the organization can, in principle, observe the decay.
+
+The ELDM (Paper 9) described four drift mechanisms. Every one of them produces
+artifacts that are observable if the organization looks:
+  Scope drift   → phantom assets appear in the asset inventory
+  Temporal drift → expiry dates are readable in the exception register
+  Ownership drift → HR directory shows the custodian has departed
+  Detection drift → SIEM shows the compensation rule has gone silent
+
+These artifacts require the organization to look in the right places at the
+right time. They are not automatically surfaced. But they are in principle
+observable — the data exists in systems the organization owns and operates.
+
+Vendor exceptions do not have this property.
+
+When your organization enters a contractual relationship with a vendor who
+processes your data, accesses your systems, or provides services that sit
+in your security chain, you become dependent on that vendor's security posture.
+But the vendor's security posture is not in any system you own. It is in:
+  The vendor's internal exception register (which you cannot read)
+  The vendor's SIEM (which you cannot query)
+  The vendor's asset inventory (which you cannot audit)
+  The vendor's HR directory (which you cannot check for custodian departures)
+  The vendor's GRC platform (which you cannot access)
+
+You receive periodic assertions about this posture: a SOC 2 report once or twice
+a year, an ISO 27001 certificate that is valid for three years, a security
+questionnaire response that reflects the vendor's state of mind on the day it
+was completed, a penetration test report that describes the environment as it
+existed when the tester was in it.
+
+Between those assertions, the vendor's environment continues to operate. Their
+exceptions continue to decay. Their EDS scores continue to fall. And you cannot
+see any of it.
+
+1.2 THE STRUCTURAL ADVANTAGE THIS GIVES AN ATTACKER
+
+An attacker targeting your organization evaluates the attack surface holistically.
+Your own perimeter has defenses you have invested in. Your SIEM watches your
+assets. Your EDR covers your endpoints. Your GRC exceptions are at least in a
+register that could be reviewed.
+
+Your vendors have perimeters they have invested in — but typically less than
+yours, because vendor security investment scales with vendor size and revenue,
+and most of your vendors are smaller than you. Their SIEM may watch fewer assets.
+Their EDR may have lower coverage. Their GRC exceptions may be less rigorously
+managed.
+
+And you have given those vendors something extraordinarily valuable: a trust
+relationship into your environment. A valid VPN credential. An API key with
+scope into your customer data. An identity in your Azure AD tenant. A service
+account with access to your file servers. An SFTP credential to your payment
+processing pipeline.
+
+The attacker's decision: attack you directly (defended environment, high cost)
+or attack your vendor (less defended, lower cost) and then walk the trust
+relationship into you (already established, zero additional authentication
+required).
+
+This is not a theoretical attack pattern. It is the documented pattern of every
+major supply chain breach in the last decade:
+
+  SolarWinds (2020): Compromise of SolarWinds build pipeline → malicious update
+    distributed to 18,000+ customers → attackers walked into customer environments
+    using the legitimate SolarWinds Orion trust relationship.
+
+  Kaseya VSA (2021): Compromise of Kaseya's MSP platform → REvil ransomware
+    deployed to 60+ MSPs → ransomware propagated to MSP customers through the
+    management trust relationship.
+
+  Okta (2022): Compromise of Okta's support system → access to customer tenants
+    through the support trust relationship → Twilio, Cloudflare, and 300+ customers
+    affected.
+
+  3CX (2023): Compromise of 3CX's software supply chain → malicious update to
+    3CX desktop client → deployed in customer environments through the update trust
+    relationship.
+
+  MOVEit (2023): Zero-day in MOVEit file transfer software → Cl0p ransomware group
+    compromised MOVEit installations at 2,500+ organizations → data exfiltrated
+    through the file transfer trust relationship.
+
+In each case: the attacker did not break through the victim organization's
+defenses. They walked through a door the organization had opened and handed
+a key to a vendor they trusted.
+
+1.3 THE SPECIFIC DECAY PROBLEM FOR VENDOR RELATIONSHIPS
+
+Vendor relationships age in a way that internal security configurations also age,
+but with an additional dimension. An internal configuration that was correct when
+deployed can become incorrect as the threat landscape changes. A vendor relationship
+that was appropriate when contracted can become inappropriate as:
+
+  THE VENDOR'S SECURITY POSTURE DECAYS:
+    Their exceptions accumulate. Their certifications age past the last audit.
+    Their security team churns. Their controls drift from their documentation.
+    This is the ELDM happening inside the vendor — but you cannot observe it.
+
+  THE TRUST SCOPE EXPANDS WITHOUT RE-ASSESSMENT:
+    The vendor was initially contracted for one function with one access path.
+    Over time, additional functions were added, additional access was granted,
+    the vendor became embedded deeper in your operations — but each addition
+    was a routine operational decision, not a security re-assessment. The access
+    the vendor has in 2026 was never collectively assessed against your current
+    risk appetite.
+
+  THE THREAT LANDSCAPE CHANGES AROUND THE RELATIONSHIP:
+    The vendor's access was assessed as low-risk in 2021 because the techniques
+    that could exploit it were not yet in common use. By 2026, those techniques
+    are documented, tooled, and actively deployed by multiple threat actor groups.
+    The relationship has the same access profile. The risk has multiplied.
+
+  THE REGULATORY ENVIRONMENT CHANGES AROUND THE RELATIONSHIP:
+    DORA, NIS2, and AI Act impose new requirements on vendor relationships that
+    did not exist when the contract was signed. The contract does not contain
+    the right provisions. The audit rights do not cover the right scope. The
+    notification requirements are not defined. The relationship is non-compliant
+    with frameworks that did not exist when it was established.
+
+All four of these decay mechanisms are external to the vendor — they are about
+the relationship between the accepting organization and the vendor, not about
+the vendor's internal controls. They operate in addition to the vendor's own
+internal ELDM decay. The total decay is compounded.
+
+--------------------------------------------------------------------------------
+SECTION 2 — THE FIVE DECAY MECHANISMS OF VENDOR EXCEPTIONS
+--------------------------------------------------------------------------------
+
+The ELDM identified four internal decay mechanisms: Scope, Temporal, Ownership,
+and Detection. Vendor exceptions exhibit all four — but operating through the
+contract and the certification rather than through internal governance documents
+— plus a fifth mechanism that has no internal equivalent.
+
+--------------------------------------------------------------------------------
+2.1 CONTRACT DRIFT (CD) — The Scope Mechanism for Vendor Relationships
+--------------------------------------------------------------------------------
+
+DEFINITION:
+Contract Drift measures the degree to which the access, processing scope,
+and security obligations documented in the current contract match the actual
+operational relationship between the organization and the vendor.
+
+THE MECHANISM:
+When a vendor contract is signed, it describes:
+  - What data the vendor can access
+  - What systems the vendor can reach
+  - What security standards the vendor must maintain
+  - What the vendor can and cannot do with the data
+  - What happens when the vendor has a security incident
+
+Between contract signing and the present, the actual relationship has evolved:
+  New use cases emerged that required new data access → granted operationally,
+    not contractually. The contract says the vendor accesses customer name and
+    email. The current reality: they also access transaction history and device
+    fingerprints, added 18 months ago when a new integration was built.
+    
+  Old use cases were terminated but access was not revoked → the vendor's
+    technical access includes credentials and API keys for functions they no
+    longer perform. The credentials remain active. The contract does not describe
+    them because they predate the current contract version.
+    
+  The security standards clause references a specific framework version that
+    has since been superseded → the contract requires "NIST CSF compliance"
+    which has been updated (CSF 2.0, released 2024) adding the GOVERN function.
+    The vendor's SOC 2 report assesses against NIST CSF 1.1. The contract
+    technically requires something different from what the certification covers.
+    
+  The incident notification clause specifies a timeframe that predates DORA
+    and NIS2 → the contract requires notification "within a reasonable time"
+    (pre-DORA boilerplate). DORA Art. 19 requires ICT incident notification
+    within 4 hours for major incidents. "Reasonable time" is not 4 hours.
+    The contract creates a compliance gap the moment DORA applies.
+
+CONTRACT DRIFT FORMULA:
+  CD(v,t) = (aligned_contract_terms / total_operational_terms) ×
+             (1 - (days_since_contract_review / review_SLA_days))
+
+Where:
+  aligned_contract_terms = number of operational realities correctly described
+                            in the current contract
+  total_operational_terms = total number of material operational facts
+                             (access paths, data categories, security obligations)
+  days_since_contract_review = elapsed since last formal contract security review
+  review_SLA_days = required review cadence (recommended: 365 days)
+
+CONTRACT DRIFT AUDIT PROCEDURE:
+
+  STEP 1 — OPERATIONAL REALITY MAP (2 hours per vendor):
+    Pull all current technical access:
+      Active credentials (API keys, service accounts, VPN accounts)
+      OAuth grants held by vendor applications (Paper 11 territory)
+      Network firewall rules with vendor IP ranges as source
+      Cloud IAM role assignments with vendor principal ARNs
+    
+    Pull all current data flows:
+      Data shared with vendor (from data flow maps or DLP logs)
+      Data processed by vendor on organization's behalf
+      Data the vendor creates that flows back into the organization
+    
+    This is the ACTUAL scope of the relationship.
+
+  STEP 2 — CONTRACT MAPPING:
+    For each item in the operational reality map: is it explicitly described
+    in the current contract (or DPA, or MSA, or SOW)?
+    
+    Aligned: operational reality matches contract description
+    Underdescribed: operational reality broader than contract description
+    Overdescribed: contract describes something that no longer happens
+    Conflicting: contract description inconsistent with operational reality
+
+  STEP 3 — GAP QUANTIFICATION:
+    Compute CD(v,t) from the aligned/total ratio and the time since last review.
+    
+    Findings:
+    CD < 0.5: Contract Drift finding — requires contract remediation before
+              next renewal AND immediate access review for underdescribed items
+    CD < 0.3: Critical finding — the contract no longer accurately describes
+              the relationship. Regulatory exposure for undescribed processing
+              (GDPR Art. 28 applies to all processing, not just contracted processing)
+
+QUERY — VENDOR ACCESS NOT IN CONTRACT REGISTRY (SQL):
+
+  SELECT
+      a.credential_id,
+      a.vendor_name,
+      a.credential_type,
+      a.access_scope,
+      a.created_date,
+      DATEDIFF(day, a.created_date, GETDATE()) AS days_active,
+      c.contract_id,
+      c.documented_access_scope,
+      c.contract_expiry
+  FROM vendor_credentials a
+  LEFT JOIN vendor_contracts c
+      ON a.vendor_name = c.vendor_name
+      AND a.access_scope LIKE CONCAT('%', c.documented_access_scope, '%')
+  WHERE
+      c.contract_id IS NULL                               -- no matching contract
+      OR c.contract_expiry < GETDATE()                    -- expired contract
+      OR DATEDIFF(day, c.last_reviewed, GETDATE()) > 365  -- stale review
+  ORDER BY days_active DESC
+
+OUTPUT: Every vendor credential that is either undocumented in any contract,
+covered by an expired contract, or covered by a contract not reviewed in a year.
+Each row is a Contract Drift finding requiring immediate attention.
+
+--------------------------------------------------------------------------------
+2.2 ATTESTATION DRIFT (AD) — The Temporal Mechanism for Vendor Relationships
+--------------------------------------------------------------------------------
+
+DEFINITION:
+Attestation Drift measures how much of the vendor's security posture is covered
+by current, scope-accurate, recently validated security attestations — and how
+much has aged beyond the point where the attestation provides meaningful assurance.
+
+This is the vendor equivalent of the ELDM's AL_n (Authorization Lag, normalized)
+component. For internal exceptions, authorization lag measures how long the
+exception has operated beyond its expiry date. For vendor relationships,
+attestation drift measures how far the security certification has aged from
+the audit period that produced it.
+
+THE THREE ATTESTATION TYPES AND THEIR DECAY RATES:
+
+TYPE 1 — SOC 2 TYPE II REPORT:
+  Issued: covers a specific audit period (typically 6-12 months)
+  Frequency: typically annual (one report per year)
+  Validity period: typically 12 months from report date
+  
+  Decay profile:
+    Month 0:   Report issued. Covers audit period that ended ~2 months prior.
+               Actual coverage lag at issuance: ~2 months.
+    Month 6:   Report is 6 months old. Controls it assessed are 8 months old.
+               Organizational changes in that 8 months are not reflected.
+    Month 12:  Report is 12 months old. Controls it assessed are 14 months old.
+               Typical renewal point. Many organizations accept reports up to
+               18 months old — at which point the assessed controls may be
+               2 years old.
+    Month 18+: Standard "stale SOC 2" situation. The report is still presented
+               as evidence. It describes a 2-year-old snapshot of controls.
+
+  THE CRITICAL LIMITATION OF SOC 2 TYPE II THAT NOBODY EXPLAINS CLEARLY:
+  
+  A SOC 2 Type II report says: during the audit period, the described controls
+  were in place and operating effectively, as tested by the auditor's sampling.
+  
+  It does NOT say:
+    - That every control the vendor has was tested (auditors test a sample)
+    - That the controls remain in place after the audit period ended
+    - That the controls are effective against current threats (not just against
+      the threats that defined the control criteria when the trust service
+      criteria were written)
+    - That controls outside the defined trust service categories are adequate
+    - That the vendor's controls cover your specific data or processing activity
+      (the report covers the vendor's general environment, not your specific tenant)
+  
+  In ELDM terms: a SOC 2 Type II report has CC at the audit completion date.
+  After that date, CC decays. The report does not decay — the report is a fixed
+  document — but the controls the report describes have been continuing to operate
+  in an environment that continues to change. The report's accuracy as a
+  description of the current state degrades every day after the audit period ends.
+  
+  AD(SOC2, t) = 1/(1 + days_since_audit_end/180)
+  
+  At audit_end + 0 days:  AD = 1.0
+  At audit_end + 180 days: AD = 0.5
+  At audit_end + 365 days: AD = 0.36 (most stale reports accepted as current)
+  At audit_end + 730 days: AD = 0.20 (common if vendor renews late)
+
+TYPE 2 — ISO 27001 CERTIFICATE:
+  Issued: covers a point-in-time certification audit
+  Validity: 3 years with annual surveillance audits
+  
+  The 3-year validity period is the most dangerous attestation decay pattern
+  in common use. An ISO 27001 certificate that is 2 years and 11 months old
+  was issued based on an audit of the organization's ISMS as it existed nearly
+  three years ago. The annual surveillance audits confirm that the ISMS "continues
+  to meet requirements" — but surveillance audits are not full re-certifications.
+  They cover approximately 30-40% of the control set.
+  
+  Between a full certification audit (year 0) and re-certification (year 3),
+  the vendor's environment has undergone three years of change that the
+  certificate does not reflect. New technologies deployed. New threat vectors.
+  New staff. New systems. Old exceptions accumulated.
+  
+  AD(ISO27001, t):
+    Year 0 (certification):    AD = 1.0
+    Year 1 (surveillance 1):   AD = 0.7 (surveillance covers ~35% of controls)
+    Year 2 (surveillance 2):   AD = 0.5
+    Year 3 (re-certification): AD = 0.35 (just before re-cert, most stale point)
+    After re-certification:    AD = 1.0 (reset)
+
+TYPE 3 — PENETRATION TEST REPORT:
+  Issued: point-in-time assessment of the environment as it existed during testing
+  Standard frequency: annual (best practice) or as required by contract/regulation
+  
+  The penetration test report is the most rapidly decaying attestation because:
+    1. It covers only the scope the tester was given (typically not the vendor's
+       entire environment — just the portion relevant to your relationship)
+    2. The environment changes faster than any other factor (new vulnerabilities,
+       new deployments, new configurations)
+    3. Every day after the test is conducted, new CVEs are disclosed that the
+       test did not assess because they did not exist
+  
+  A penetration test from 12 months ago is not evidence of current security.
+  It is evidence that 12 months ago, in the tested scope, the tester found
+  the vulnerabilities they found. Everything that has changed since is uncovered.
+  
+  AD(PENTEST, t) = 1/(1 + days_since_test/90)
+  
+  At test+0:   AD = 1.0
+  At test+90:  AD = 0.5
+  At test+180: AD = 0.33
+  At test+365: AD = 0.21
+
+COMBINED ATTESTATION DRIFT SCORE:
+  AD(v,t) = harmonic_mean(AD_SOC2, AD_ISO27001, AD_PENTEST)
+  
+  Using harmonic mean rather than arithmetic mean — same defense as ELDM's
+  product form — prevents a strong attestation in one category from masking
+  a completely stale attestation in another. A vendor with a fresh SOC 2 but
+  a 2-year-old penetration test has a mixed posture that arithmetic averaging
+  would overstate.
+
+QUERY — VENDOR ATTESTATIONS PAST DECAY THRESHOLD (SQL):
+
+  SELECT
+      v.vendor_name,
+      v.vendor_tier,
+      v.data_categories_processed,
+      s.report_date AS soc2_date,
+      DATEDIFF(day, s.audit_period_end, GETDATE()) AS soc2_age_days,
+      1.0 / (1.0 + DATEDIFF(day, s.audit_period_end, GETDATE()) / 180.0) AS ad_soc2,
+      i.certificate_date AS iso_cert_date,
+      DATEDIFF(day, i.certificate_date, GETDATE()) AS iso_age_days,
+      p.test_date AS pentest_date,
+      DATEDIFF(day, p.test_date, GETDATE()) AS pentest_age_days,
+      1.0 / (1.0 + DATEDIFF(day, p.test_date, GETDATE()) / 90.0) AS ad_pentest
+  FROM vendor_registry v
+  LEFT JOIN vendor_soc2_reports s ON v.vendor_id = s.vendor_id
+      AND s.report_date = (SELECT MAX(report_date) FROM vendor_soc2_reports
+                           WHERE vendor_id = v.vendor_id)
+  LEFT JOIN vendor_iso27001_certs i ON v.vendor_id = i.vendor_id
+      AND i.is_current = 1
+  LEFT JOIN vendor_pentests p ON v.vendor_id = p.vendor_id
+      AND p.test_date = (SELECT MAX(test_date) FROM vendor_pentests
+                         WHERE vendor_id = v.vendor_id)
+  WHERE
+      v.vendor_tier IN ('Critical', 'High')
+      AND (
+          DATEDIFF(day, s.audit_period_end, GETDATE()) > 365
+          OR DATEDIFF(day, p.test_date, GETDATE()) > 365
+          OR s.report_date IS NULL
+          OR p.test_date IS NULL
+      )
+  ORDER BY soc2_age_days DESC, pentest_age_days DESC
+
+OUTPUT: Critical and high-tier vendors whose primary attestations have exceeded
+decay thresholds. Each row is an Attestation Drift finding requiring either
+vendor engagement to obtain fresh attestation or a risk register entry documenting
+the gap and the accepted exposure.
+
+--------------------------------------------------------------------------------
+2.3 TELEMETRY DRIFT (TD) — The Detection Mechanism for Vendor Relationships
+--------------------------------------------------------------------------------
+
+DEFINITION:
+Telemetry Drift measures the degree to which the accepting organization retains
+real-time visibility into the vendor's activities that affect the organization's
+security posture — and how that visibility degrades over time as the vendor's
+integration deepens and the telemetry architecture lags behind it.
+
+This is the vendor equivalent of the ELDM's CL (Compensation Liveness) component.
+For internal exceptions, CL measures whether the compensating detection rule is
+still receiving data and still firing correctly. For vendor relationships, TD
+measures whether the organization can observe what the vendor is doing in its
+environment — and whether that visibility is still accurate.
+
+THE TELEMETRY GAP STRUCTURE:
+
+Most accepting organizations have some vendor activity logging. What they have
+is almost never complete. The telemetry gap has four layers:
+
+  LAYER 1 — ACCESS EVENT LOGGING (usually present):
+    VPN authentication events for vendor accounts
+    API authentication events for vendor API keys
+    Firewall logs for traffic from vendor IP ranges
+    Azure AD sign-in logs for vendor service principals
+    
+    This layer tells you WHEN the vendor connected and from WHERE.
+    Most organizations have this. Most organizations do not alert on it
+    meaningfully (the vendor connects every day — when does the alert fire?
+    When they connect from a new IP? When they connect outside business hours?
+    Are those thresholds defined, documented, and tested?)
+
+  LAYER 2 — ACTION LOGGING WITHIN VENDOR SESSION (partially present):
+    What did the vendor API key query after authenticating?
+    What records did the vendor access in your Salesforce tenant?
+    What files did the vendor touch in your SharePoint?
+    What changes did the vendor's service account make in your AD?
+    
+    Most organizations have the raw log data for this. Most organizations
+    have no alert rules on it. A vendor that accesses 10,000 customer records
+    during normal support operations and 10,000 customer records during
+    an active exfiltration event generates identical log entries.
+    Without a baseline for vendor action volume and type, no anomaly fires.
+
+  LAYER 3 — VENDOR-SIDE LOGGING (almost never present):
+    What is happening in the vendor's environment that affects your security?
+    Has the vendor experienced a security incident that may affect your data?
+    Has the vendor made changes to the systems that access your environment?
+    Has the vendor's staff who have access to your account changed?
+    
+    This is invisible. You cannot instrument the vendor's environment.
+    You receive this information through disclosure — the vendor tells you —
+    which is mediated by the vendor's incident response program, their legal
+    review of notification obligations, and their assessment of what you
+    need to know.
+    
+    The Okta breach (2022) was a case study in Layer 3 telemetry failure:
+    Okta had a breach. Customers had no Layer 3 telemetry. Customers discovered
+    they were affected when Lapsus$ published screenshots — not through Okta's
+    disclosure, which came later and incompletely. The customer's Layer 1 and 2
+    telemetry continued to show normal Okta activity throughout, because the
+    breach was in Okta's internal environment (Layer 3), not in the authentication
+    flows the customer could observe.
+
+  LAYER 4 — FOURTH-PARTY VISIBILITY (essentially never present):
+    Your vendor has vendors. Those vendors have access to your vendor's environment
+    which has access to yours. Fourth-party risk is the recognition that your
+    vendor's supply chain is also your supply chain — at one remove.
+    
+    The SolarWinds breach was technically a fifth-party event for some victims:
+    the attacker compromised SolarWinds (the third party) which distributed
+    updates to SolarWinds customers (fourth-party event) which used SolarWinds
+    to manage customer networks (fifth-party event for those customers' customers).
+    
+    Almost no organization has any telemetry for fourth-party activity.
+
+TELEMETRY DRIFT CALCULATION:
+  TD(v,t) = (layers_with_meaningful_coverage / 4) ×
+             (1 - integration_depth_delta × coverage_lag_rate)
+
+Where:
+  layers_with_meaningful_coverage = count of layers with alert rules and tested baselines
+  integration_depth_delta = increase in vendor integration scope since last telemetry review
+  coverage_lag_rate = rate at which new integration scope goes unmonitored
+
+BUILDING MEANINGFUL LAYER 1 AND 2 COVERAGE — DETECTION QUERIES:
+
+KQL — VENDOR ACCESS OUTSIDE NORMAL PATTERN (Layer 1 baseline anomaly):
+
+  // First, establish vendor baseline (run as scheduled query, store results)
+  let VendorBaseline = SigninLogs
+  | where TimeGenerated between (ago(90d) .. ago(1d))
+  | where ServicePrincipalName in (VendorServicePrincipals)
+      or UserPrincipalName in (VendorUserAccounts)
+  | summarize
+      TypicalHours = make_set(hourofday(TimeGenerated)),
+      TypicalCountries = make_set(LocationDetails.countryOrRegion),
+      AvgDailyAuths = count() / 90.0
+    by VendorId = tostring(AppId);
+
+  // Then detect deviations from baseline (real-time)
+  SigninLogs
+  | where TimeGenerated > ago(1d)
+  | where ServicePrincipalName in (VendorServicePrincipals)
+      or UserPrincipalName in (VendorUserAccounts)
+  | extend VendorId = tostring(AppId), Hour = hourofday(TimeGenerated)
+  | join kind=leftouter VendorBaseline on VendorId
+  | where Hour !in (TypicalHours)                              // unusual hour
+      or LocationDetails.countryOrRegion !in (TypicalCountries)  // new country
+  | project TimeGenerated, VendorId, UserPrincipalName,
+            IPAddress, LocationDetails, ResultType,
+            Deviation = case(
+                Hour !in (TypicalHours), "OFF_HOURS",
+                LocationDetails.countryOrRegion !in (TypicalCountries), "NEW_COUNTRY",
+                "UNKNOWN"
+            )
+
+SPL — VENDOR API KEY ANOMALOUS DATA VOLUME (Layer 2 content anomaly):
+
+  index=api_logs vendor_key=* action=GET OR action=POST
+  | eval vendor_name=case(
+      match(api_key, "^vend_.*_cust$"), "CustomerVendorA",
+      match(api_key, "^svc_.*_ext$"),  "SupportVendorB",
+      "unknown"
+    )
+  | where vendor_name != "unknown"
+  | bucket _time span=1h
+  | stats
+      sum(records_returned) as records_accessed,
+      sum(bytes_transferred) as bytes_out,
+      dc(endpoint) as endpoints_hit
+    by _time, vendor_name, api_key
+  | eventstats
+      avg(records_accessed) as avg_records,
+      stdev(records_accessed) as stdev_records
+    by vendor_name
+  | where records_accessed > (avg_records + 3 * stdev_records)
+  | eval zscore = (records_accessed - avg_records) / stdev_records
+  | table _time, vendor_name, api_key, records_accessed, avg_records,
+          zscore, bytes_out, endpoints_hit
+  | sort -zscore
+
+OUTPUT: Vendor API access sessions where data volume exceeds 3 standard
+deviations above that vendor's mean. Each row is a potential data exfiltration
+event via the vendor channel — distinguishable from the attacker's use only
+by investigation of the authorization chain and the vendor's incident status.
+
+--------------------------------------------------------------------------------
+2.4 OBLIGATION RECESSION (OR) — The Ownership Mechanism for Vendor Relationships
+--------------------------------------------------------------------------------
+
+DEFINITION:
+Obligation Recession measures how well the vendor's contractual security
+obligations are currently being enforced — specifically, how many of the security
+requirements that were active when the contract was signed have since receded
+from active enforcement due to relationship maturation, organizational change,
+or the absence of a verification mechanism.
+
+This is the vendor equivalent of the ELDM's CC (Custodial Continuity) component.
+For internal exceptions, CC measures whether a named custodian still owns the
+exception and can be reached for incident escalation. For vendor relationships,
+OR measures whether a named internal owner is still actively enforcing the
+vendor's contractual security obligations.
+
+THE RELATIONSHIP MATURATION PROBLEM:
+When a vendor relationship is new, the procurement and legal teams enforce
+contract terms because the negotiation is recent memory. Security teams request
+quarterly reports, invoke audit rights, and escalate when SLAs are missed.
+
+As the relationship matures:
+  The procurement champion who negotiated the specific security terms moves on.
+  The new relationship manager values service continuity over security enforcement.
+  Requesting audit reports becomes "relationship friction" that nobody wants to create.
+  The security team stops following up because the vendor has "always been fine."
+  
+  The contract still requires quarterly security reports. They stopped arriving
+  at month 18. No one followed up. No one noticed. The obligation receded.
+
+OR MEASUREMENT:
+  OR(v,t) = (actively_enforced_obligations / total_contractual_obligations) ×
+             (1 - owner_tenure_decay)
+
+Where:
+  actively_enforced_obligations = obligations with documented enforcement activity
+                                   in the last 90 days
+  total_contractual_obligations = total security obligations in the contract
+  owner_tenure_decay = decay factor for the tenure of the vendor relationship owner
+    (same formula as ELDM's CC custodian continuity — owner changes without
+     formal handoff of enforcement knowledge accelerates recession)
+
+THE OBLIGATION TAXONOMY:
+  For each vendor contract, security obligations fall into five categories:
+
+  Category A — Notification obligations (highest decay rate):
+    "Vendor will notify accepting organization of security incidents within [time]"
+    These are the obligations most likely to be untested until an incident occurs.
+    At incident time, if the relationship has matured beyond active enforcement,
+    the vendor may not know what "notification" means in this context, who to notify,
+    or what the contracted timeframe is.
+
+  Category B — Attestation delivery obligations:
+    "Vendor will provide SOC 2 Type II report within 30 days of issuance"
+    These are easy to track (did the report arrive?) but frequently drift because
+    no automated tracking exists. The vendor delivers the report when asked.
+    They are asked when someone remembers to ask.
+
+  Category C — Access review obligations:
+    "Vendor will review and certify all personnel with access to accepting
+    organization's systems quarterly"
+    Extremely valuable when enforced. Almost never enforced in practice because
+    no accepting organization has a mechanism to verify the vendor actually
+    conducted the review.
+
+  Category D — Subprocessor notification obligations:
+    "Vendor will notify accepting organization before engaging any new subprocessor"
+    This is GDPR Art. 28(4) territory. Vendors frequently add and change
+    subprocessors without notification, particularly for cloud infrastructure
+    components. The obligation exists. The enforcement mechanism is absent.
+
+  Category E — Right to audit:
+    "Accepting organization may audit vendor's controls relevant to this contract
+    on [frequency] with [notice period]"
+    Almost never exercised. The legal cost, operational cost, and relationship
+    friction of exercising an audit right means this obligation exists in
+    99% of contracts and is exercised in approximately 1% of relationships.
+
+QUERY — OBLIGATION ENFORCEMENT TRACKING (SQL):
+
+  SELECT
+      v.vendor_name,
+      v.vendor_tier,
+      o.obligation_category,
+      o.obligation_description,
+      o.enforcement_frequency,
+      o.last_enforced_date,
+      DATEDIFF(day, o.last_enforced_date, GETDATE()) AS days_since_enforcement,
+      o.enforcement_owner,
+      e.status AS owner_employment_status,
+      CASE
+          WHEN DATEDIFF(day, o.last_enforced_date, GETDATE()) > (o.enforcement_frequency_days * 2)
+          THEN 'CRITICAL_RECESSION'
+          WHEN DATEDIFF(day, o.last_enforced_date, GETDATE()) > o.enforcement_frequency_days
+          THEN 'OBLIGATION_OVERDUE'
+          WHEN e.status != 'ACTIVE'
+          THEN 'OWNER_DEPARTED'
+          ELSE 'CURRENT'
+      END AS obligation_status
+  FROM vendor_registry v
+  JOIN vendor_obligations o ON v.vendor_id = o.vendor_id
+  LEFT JOIN hr_directory e ON o.enforcement_owner = e.email
+  WHERE v.vendor_tier IN ('Critical', 'High')
+  ORDER BY obligation_status DESC, days_since_enforcement DESC
+
+OUTPUT: All security obligations for critical and high-tier vendors, with
+enforcement status. CRITICAL_RECESSION items are obligations that have not
+been enforced in more than twice their required frequency — the obligation
+exists in the contract but has effectively ceased to operate.
+
+--------------------------------------------------------------------------------
+2.5 TRUST OPACITY (TO) — The Fifth Decay Mechanism With No Internal Equivalent
+--------------------------------------------------------------------------------
+
+DEFINITION:
+Trust Opacity is the unique decay mechanism for vendor exceptions that has
+no equivalent in internal exception management. It measures the degree to which
+the accepting organization is operating on trust rather than evidence for its
+assessment of the vendor's current security posture.
+
+While the four previous mechanisms (CD, AD, TD, OR) can all be improved by
+better governance, Trust Opacity reflects a structural reality that cannot be
+fully eliminated: you are not the vendor. You will never have complete visibility
+into their environment. The opacity is irreducible — it can only be reduced,
+never eliminated.
+
+THE THREE LAYERS OF TRUST OPACITY:
+
+OPACITY LAYER 1 — INTERNAL POSTURE OPACITY:
+  The vendor's internal exception register, risk register, and security controls
+  are not visible to the accepting organization. The accepting organization knows
+  what the vendor claims about its security posture (through questionnaires,
+  certifications, contract representations). It does not know the actual posture.
+  
+  The ELDM operates inside the vendor at the same rates as inside your organization.
+  Vendor exceptions decay. Their EDS scores fall. Their compensating detections
+  go silent. Their custodians depart. Their scope drifts.
+  
+  You cannot see any of this. The vendor's audit report describes controls
+  at a point in time. Between audit points, the vendor's internal decay is
+  invisible to you.
+
+OPACITY LAYER 2 — FOURTH-PARTY OPACITY:
+  Your vendor has vendors. Their supply chain is part of your supply chain
+  at one remove. The vendor's SOC 2 report typically includes "complementary
+  subservice organization controls" — an acknowledgment that the vendor relies
+  on other vendors for specific functions and that the audit scope does not
+  cover those sub-vendors.
+  
+  The critical sentence in almost every SOC 2 Type II report that most
+  accepting organizations do not read carefully enough:
+  "This report does not include the controls at the subservice organizations.
+   Users of this report should apply the concept of carve-outs and consider
+   the effect on the overall control environment."
+  
+  In practice: the vendor uses AWS for infrastructure, Okta for identity,
+  Twilio for communications, and Salesforce for CRM. Each of these is a
+  subservice organization. Each is carved out of the SOC 2 scope. The controls
+  the vendor uses from each of these platforms are not tested. Your vendor's
+  SOC 2 "covers" the environment, with asterisks attached to every component
+  that runs on someone else's infrastructure.
+
+OPACITY LAYER 3 — INCIDENT DISCLOSURE OPACITY:
+  When the vendor has a security incident that affects your data or your
+  integration, you depend on the vendor's disclosure to learn about it.
+  That disclosure is filtered through:
+  - The vendor's incident response program (how quickly do they detect and
+    characterize incidents?)
+  - The vendor's legal team (what are the notification obligations? What
+    must be disclosed vs. what can be managed quietly?)
+  - The vendor's relationship management team (how is this framed to
+    minimize customer concern and contract termination risk?)
+  - The contractual notification obligations (which may not require
+    notification of all incidents — only "material" ones, which the
+    vendor defines)
+  
+  The Okta 2022 breach was discovered by Okta approximately two months
+  before they notified customers. The notification, when it came, minimized
+  the scope of impact. The full scope was learned through third-party research
+  and affected customer investigation, not through Okta's disclosure.
+  Customers who relied solely on Okta's disclosure operated with incorrect
+  information about the scope of their exposure for weeks.
+
+TRUST OPACITY SCORE:
+  TO(v,t) = (1 - opacity_fraction) where:
+  opacity_fraction = (opaque_risk_surface / total_risk_surface)
+  
+  opaque_risk_surface = vendor assets in scope for your relationship that
+    are not covered by any current, in-scope attestation or telemetry
+  total_risk_surface = all vendor assets in scope for your relationship
+  
+  Practical approximation from vendor tiering:
+    Tier 1 Critical vendor with full SOC 2, regular engagement,
+    Layer 1+2 telemetry, active obligation enforcement: TO ≈ 0.3-0.5
+    (even the best relationship has structural opacity)
+    
+    Tier 2 High vendor with aging attestation, no Layer 2 telemetry,
+    receded obligations: TO ≈ 0.1-0.2
+    
+    Tier 3 Standard vendor with questionnaire only, no attestation,
+    no telemetry, nominal obligations: TO ≈ 0.0-0.05
+
+THE IRREDUCIBILITY OF TRUST OPACITY:
+  TO cannot reach 1.0 for any real vendor relationship. The best possible
+  state — full-scope SOC 2 covering all subservice organizations, real-time
+  telemetry sharing, on-site audit rights exercised quarterly, complete
+  fourth-party visibility — still leaves opacity in the vendor's internal
+  incident detection and response timeline.
+  
+  This irreducibility is why vendor relationships always carry residual risk
+  that internal controls do not carry. You can control your own environment.
+  You cannot control your vendor's. The best you can do is reduce the opacity
+  and create contractual obligations that convert vendor-side failures into
+  disclosures you can act on.
+  
+  The practical implication for VEDS: TO sets a ceiling on VEDS that is
+  always below 1.0. A perfectly managed vendor relationship has VEDS < 1.0
+  because TO < 1.0. This is the honest representation of residual vendor risk:
+  it cannot be eliminated, only reduced.
+
+--------------------------------------------------------------------------------
+SECTION 3 — THE VEDS FORMULA
+--------------------------------------------------------------------------------
+
+3.1 DEFINITION AND PRODUCT FORM DEFENSE
+
+  VEDS(v,t) = CD(v,t) × AD(v,t) × TD(v,t) × OR(v,t) × TO(v,t)
+
+The product form is defended on the same grounds as EDS (Paper 9):
+
+These five components are serial dependencies, not parallel dimensions.
+A vendor relationship with excellent attestation (AD = 0.9) but no telemetry
+coverage (TD = 0.1) has VEDS = 0.09 × (other factors). The excellent attestation
+does not compensate for the telemetry gap — it simply means you know, in
+retrospect, what the vendor's controls were supposed to be when the attacker
+walked through the telemetry gap undetected.
+
+The attacker evaluates the weakest link, not the average. The product form
+encodes the attacker's evaluation function. Averaging encodes the auditor's
+evaluation function. VEDS is a security metric, not an audit metric.
+
+Maximum VEDS given structural opacity: < 1.0 (TO ceiling)
+Typical Tier 1 Critical vendor, well-managed: VEDS ≈ 0.3-0.5
+Typical Tier 2 High vendor, standard management: VEDS ≈ 0.1-0.2
+Typical Tier 3 Standard vendor, questionnaire-only: VEDS ≈ 0.02-0.08
+Post-vendor-breach, before organizational response: VEDS ≈ 0.0
+
+3.2 VEDS POPULATION ANALYSIS
+
+The question every CISO should be asking: what is my VEDS distribution
+across my vendor population?
+
+This question requires:
+  (a) A complete vendor inventory (which most organizations do not have — Paper 13's
+      enumerable risk assumption applies to vendor inventories too)
+  (b) Component data for each vendor (contracts, attestations, telemetry, obligations)
+  (c) The computation engine
+
+Most organizations have partial data for (b) in multiple disconnected systems:
+  Contracts: in legal's contract management system
+  Attestations: in GRC's vendor risk platform or a shared drive
+  Telemetry: in the SIEM (if logged) or the firewall management console
+  Obligations: in the contract management system (if tracked) or nowhere
+  Trust opacity: not formally tracked anywhere
+
+The VEDS implementation roadmap for most organizations therefore starts
+not with computation but with data consolidation.
+
+PHASE 1 — VENDOR INVENTORY AND TIER CLASSIFICATION (Month 1-2):
+  Pull all vendors with any form of system access or data processing.
+  Classify by tier:
+    Tier 1 Critical: vendors whose failure could cause immediate operational
+      or regulatory impact (cloud infrastructure, identity providers, payment
+      processors, core SaaS applications, MSSPs)
+    Tier 2 High: vendors with access to personal data, financial data, or
+      internal systems (support tools, analytics platforms, professional services)
+    Tier 3 Standard: vendors with limited access and data handling
+    Tier 4 Low: no system access, no data processing
+
+PHASE 2 — CONTRACT AND ATTESTATION DATA CONSOLIDATION (Month 2-4):
+  For all Tier 1 and Tier 2 vendors:
+  Pull current contract, DPA, and MSA. Extract security obligations.
+  Pull latest attestation documents (SOC 2, ISO cert, pentest).
+  Compute CD and AD for each vendor.
+  Produce: ranked list by CD × AD score — the vendors with the worst
+  contract and attestation health.
+
+PHASE 3 — TELEMETRY AND OBLIGATION AUDIT (Month 4-6):
+  For Tier 1 vendors:
+  Map all vendor access paths (credentials, OAuth grants, network rules).
+  Assess Layer 1 and Layer 2 telemetry coverage and alerting.
+  Inventory all contractual security obligations and enforcement status.
+  Compute TD and OR for each vendor.
+
+PHASE 4 — FULL VEDS COMPUTATION AND RISK REGISTER INTEGRATION:
+  Compute TO from the opacity fraction for each vendor.
+  Compute VEDS = CD × AD × TD × OR × TO for all Tier 1 and Tier 2 vendors.
+  Integrate VEDS scores into the risk register.
+  VEDS < 0.2 for a Tier 1 vendor: immediate action required.
+  Produce VEDS dashboard for board reporting (see Section 6).
+
+--------------------------------------------------------------------------------
+SECTION 4 — THE VENDOR EXCEPTION TREE (VET)
+--------------------------------------------------------------------------------
+
+4.1 DEFINITION
+
+A Vendor Exception Tree maps the attack path by which an attacker chains through
+a vendor's decayed exception into the accepting organization. It extends the
+internal Exception Attack Tree (Paper 8) across the third-party boundary.
+
+The VET has a specific structure:
+
+  ROOT: The attacker's entry point into the vendor's environment
+  TRUNK: The decay mechanisms that give the attacker access to the trust relationship
+  BRANCHES: The specific trust paths from vendor into accepting organization
+  LEAVES: The attacker's objectives within the accepting organization
+
+4.2 THE CANONICAL VET — THE SUPPLY CHAIN WALKTHROUGH
+
+This is the attack tree for the most common supply chain attack pattern,
+illustrated with technical specificity:
+
+ROOT — ATTACKER ENTERS VENDOR ENVIRONMENT:
+  Entry via phishing (most common): a vendor employee with access to the
+    accepting organization's systems is phished. Credential captured.
+    
+  Entry via unpatched vulnerability: a CVE in the vendor's customer portal,
+    support system, or build pipeline is exploited.
+    
+  Entry via vendor's own vendor (fourth-party): the attacker compromises
+    the vendor's IT management tool (RMM, monitoring platform), which has
+    agent access to all customer systems.
+
+TRUNK — VENDOR'S DECAY ENABLES LATERAL MOVEMENT:
+  This is where the vendor's own ELDM score matters.
+  The attacker, inside the vendor's environment, encounters:
+  
+  The vendor's unpatched legacy system (their own CVE backlog)
+    → The vendor's patch SLA was quarterly but has drifted to "when possible"
+    → Contract drift (the contract required monthly patching — CD component)
+    
+  The vendor's over-privileged service account for customer environments
+    → Created with full-scope access when the contract was signed
+    → Never reviewed or restricted as the relationship scope narrowed
+    → Obligation recession (CD component — access scope not reviewed quarterly)
+    
+  The vendor's SOC has a detection gap for the specific technique the attacker uses
+    → The vendor's detection drift (their internal CL) means the technique
+       goes undetected in the vendor's SIEM
+    → This is the vendor's ELDM operating against the attacker's favor
+    → And the accepting organization has no visibility into this gap (TO component)
+
+BRANCH — TRUST RELATIONSHIP EXPLOITATION:
+  The attacker uses the vendor's privileged access to the accepting organization:
+  
+  BRANCH TYPE 1 — CREDENTIAL WALK:
+    The vendor maintains a service account in the accepting organization's AD.
+    The account has local admin rights on the vendor's support servers and
+    on a small set of production servers for "vendor maintenance."
+    
+    The attacker authenticates as the vendor service account.
+    They have legitimate credentials. The VPN accepts them (Layer 1 telemetry fires
+    but is not alerted because "vendor connects every day").
+    They have legitimate access to the vendor's support servers.
+    From those servers, they enumerate what else the service account can reach.
+    
+    The service account was created with "domain user + local admin on server groups A, B, C."
+    Over 4 years of vendor relationship, the server groups it has access to have expanded
+    (Contract Drift — the access was never reviewed against the original scope).
+    The service account now has local admin on 47 servers.
+    
+    The attacker moves to those 47 servers. The EDR alerts on the first lateral
+    movement attempt. But the alert fires against the service account — which is
+    in a suppression exception (because it always generates this behavior when
+    the vendor runs maintenance scripts). The exception was created 2 years ago
+    and has EDS = 0.1 (Paper 9 decay). The alert is suppressed.
+    
+    The attacker has 47 servers with local admin, suppressed alerts, and no
+    immediate detection response. They have 247 days of unobserved access.
+
+  BRANCH TYPE 2 — UPDATE DISTRIBUTION:
+    The SolarWinds / 3CX pattern. The attacker compromises the vendor's
+    software distribution pipeline. They inject malicious code into a
+    legitimate software update. The update is cryptographically signed
+    with the vendor's legitimate code signing certificate (which the attacker
+    obtained through their access to the vendor's build environment).
+    
+    The accepting organization receives the update through normal update
+    channels. The update passes signature verification (legitimate cert).
+    The EDR may scan the binary — it passes behavioral analysis (the malicious
+    behavior is dormant for 14 days, specifically to defeat sandbox analysis).
+    The update deploys. The malicious payload activates.
+    
+    The telemetry gap (TD): the accepting organization has no visibility into
+    the vendor's build pipeline (Layer 3 telemetry). The compromise happened
+    outside any observable scope.
+    
+    The attestation gap (AD): the vendor's most recent SOC 2 report does not
+    cover build pipeline security because it is not a common SOC 2 scope item.
+    The penetration test from 11 months ago did not test the build pipeline
+    because it was not in scope.
+
+  BRANCH TYPE 3 — API ABUSE:
+    The vendor has a legitimate API key with scope to read customer data
+    for their support functions. The attacker, having compromised the vendor's
+    support system, uses the API key to query customer data.
+    
+    The query volume is within normal parameters (Telemetry Drift — the Layer 2
+    anomaly detection is not calibrated, so no baseline exists for "normal" vendor
+    API volume). The queries access exactly the data the vendor is supposed to
+    access. No alert fires.
+    
+    The attacker exfiltrates data at the rate that matches the vendor's normal
+    export patterns, over the number of days it would take the vendor to run
+    a legitimate data extract for a large customer. The exfiltration is complete
+    before the vendor notices their support system was compromised.
+
+LEAF — OBJECTIVES IN ACCEPTING ORGANIZATION:
+  The attacker's objectives depend on the attacker type:
+  
+  Financially motivated (ransomware affiliate):
+    Deploy ransomware after establishing persistence on sufficient servers.
+    Wipe backup infrastructure first. Maximize encryption coverage.
+    Demand: depends on organization size and assessed payment probability.
+    
+  Espionage (nation-state or competitor):
+    Persistent, silent access to sensitive data.
+    Extract IP, strategy documents, personnel files, customer data.
+    Maintain access for months to years.
+    Leave minimal trace. Attribution back to vendor supply chain is difficult.
+    
+  Supply chain amplification (attacker targeting your customers through you):
+    Compromise your software or update distribution.
+    Use you as a second hop in their supply chain attack.
+    Your customers receive malicious updates from you, trusted by them.
+    The attack tree has another branch.
+
+4.3 THE VEDS SCORES AT EACH STAGE OF THE CANONICAL VET
+
+The attacker's path through the VET is enabled by specific VEDS component failures:
+
+  Entry (ROOT):
+    Enabled by the vendor's internal ELDM decay.
+    Your VEDS cannot prevent this. It can only ensure rapid discovery (TO reduction).
+
+  Lateral movement (TRUNK):
+    Enabled by the vendor's decayed exceptions.
+    Your VEDS cannot directly influence this. Contractual obligations (OR) can
+    require the vendor to maintain minimum EDS scores — but enforcement is weak.
+
+  Trust exploitation (BRANCH):
+    THIS IS WHERE YOUR VEDS APPLIES.
+    CD (Contract Drift) determines whether the access the attacker exploits is
+    still within the contract's defined scope — and whether controls appropriate
+    to that scope were contractually required and enforced.
+    TD (Telemetry Drift) determines whether you see the exploitation happening.
+    OR (Obligation Recession) determines whether the vendor had notification
+    obligations they have honored in time for you to respond.
+    TO (Trust Opacity) is the fundamental reason you cannot prevent this
+    branch entirely — only detect and contain it.
+
+  Objective achievement (LEAF):
+    Determined by the time between exploitation (BRANCH) and detection and
+    response. This is your MTTD and MTTR. VEDS drives the MTTD by determining
+    whether the exploitation is observable (TD component). The IR-GRC Closed
+    Loop (Paper 10) drives the MTTR by ensuring the incident response channels
+    are active and the feedback loop operates.
+
+--------------------------------------------------------------------------------
+SECTION 5 — REGULATORY MAPPING
+--------------------------------------------------------------------------------
+
+5.1 DORA — DIGITAL OPERATIONAL RESILIENCE ACT (EU, APPLIES FROM JANUARY 2025)
+
+DORA is the most operationally specific major regulation for third-party ICT
+risk ever enacted. It applies to financial entities in the EU and to ICT
+third-party service providers that are deemed critical (designated by EU regulators).
+
+DORA AND VEDS — THE DIRECT MAPPINGS:
+
+DORA Art. 28 — Third-party ICT risk management policy:
+  Requires: financial entities maintain a comprehensive ICT third-party risk
+  management policy. The policy must include: risk assessment criteria for ICT
+  third-party service providers, pre-engagement due diligence, contractual
+  arrangements, ongoing monitoring, and exit strategies.
+  
+  VEDS mapping: DORA Art. 28 requires the infrastructure that VEDS measures.
+  Specifically: the ongoing monitoring requirement maps to TD (Telemetry),
+  the contractual arrangements requirement maps to CD (Contract), the risk
+  assessment maps to the VEDS score itself.
+  
+  DORA Art. 28(3): requires a register of all contractual arrangements with
+  ICT third-party providers, updated and available to competent authorities.
+  This is the vendor inventory that Phase 1 of VEDS implementation produces.
+
+DORA Art. 30 — Key contractual provisions:
+  Requires specific minimum contractual provisions for ICT service providers,
+  including: description of services, geographic location of data processing,
+  provisions on availability and integrity, security levels, right to terminate,
+  cooperation with supervisory authorities.
+  
+  DORA Art. 30(3): for critical ICT third-party service providers, requires:
+  audit rights (the right to perform audits), right to inspect facilities,
+  notification requirements (including estimated impact and remediation measures).
+  
+  VEDS mapping: OR (Obligation Recession) directly maps to DORA Art. 30 obligation
+  enforcement. A vendor relationship where the audit rights have not been exercised
+  in the last 12 months, where the notification requirements are contractually
+  inadequate, or where the cooperation provisions are unverified, has high OR decay.
+
+DORA Art. 19 — Classifying ICT incidents:
+  Requires: classification of ICT incidents against criteria including duration,
+  geographic spread, data losses, criticality of systems affected.
+  For major ICT incidents: notification to competent authority within 4 hours
+  of classification as major.
+  
+  VEDS mapping: To trigger DORA Art. 19 notification correctly, the organization
+  must know that a vendor incident has affected it — which requires TD > 0.
+  A vendor incident that the organization learns about from news coverage 72 hours
+  after the fact (Okta pattern) creates a DORA notification obligation that was
+  impossible to fulfill on time because TD ≈ 0 for the vendor.
+
+DORA Art. 31 — Critical ICT third-party service providers:
+  Regulators may designate specific providers as "critical" — subject to enhanced
+  oversight, including direct supervisory powers over the provider.
+  
+  If your critical cloud provider, critical identity provider, or critical
+  payment processor is designated under Art. 31, your regulatory exposure for
+  incidents involving that provider is heightened regardless of your individual
+  VEDS management.
+
+5.2 NIS2 — NETWORK AND INFORMATION SECURITY DIRECTIVE (EU, TRANSPOSED BY OCTOBER 2024)
+
+NIS2 substantially expanded the scope of the original NIS Directive and added
+specific supply chain security requirements.
+
+NIS2 ART. 21(2)(d) — Supply chain security:
+  Entities must implement security measures covering supply chain security
+  including security-related aspects concerning the relationships between each
+  entity and its direct suppliers or service providers.
+  
+  This is the legislative basis for VEDS: NIS2 requires exactly the kind of
+  ongoing supply chain security assessment that VEDS formalizes.
+  
+  The specific requirement: assess the overall quality of products and cybersecurity
+  practices of suppliers and service providers, including their secure development
+  procedures.
+
+NIS2 ART. 23 — Reporting obligations:
+  Significant incidents: initial notification within 24 hours, full notification
+  within 72 hours, final report within one month.
+  
+  For supply chain incidents: the question of when the entity "became aware" of
+  the significant incident determines the notification clock start. If a vendor
+  breach affects the entity's systems, "became aware" begins when the entity
+  had reasonable grounds to suspect its systems were affected — not when the
+  vendor disclosed the breach.
+  
+  This creates a VEDS-relevant obligation: the organization's Layer 1 and Layer 2
+  telemetry must be sufficient to generate "reasonable grounds to suspect" in a
+  timely fashion. TD ≈ 0 means "reasonable grounds" may not arise until the
+  vendor discloses — which may be days or weeks into the attack window.
+
+NIS2 ART. 20 — Governance:
+  Management bodies must approve cybersecurity risk management measures and
+  oversee their implementation. Management bodies are personally liable for
+  compliance failures.
+  
+  VEDS is a management body reporting metric. A CISO who cannot demonstrate
+  to the management body that vendor risk is being measured, monitored, and
+  actively managed is exposing management body members to personal liability
+  under NIS2 Art. 20.
+  
+  The VEDS quarterly dashboard (Section 6) is the NIS2 Art. 20 evidence
+  deliverable for the management body's vendor risk oversight.
+
+5.3 ISO 27001:2022 — CONTROLS 5.19-5.22
+
+ISO 27001:2022's Annex A substantially expanded the supplier relationship
+controls compared to the 2013 version. Controls 5.19 through 5.22 are the
+direct regulatory ancestors of the VEDS model.
+
+CONTROL 5.19 — INFORMATION SECURITY IN SUPPLIER RELATIONSHIPS:
+  Requirement: processes and procedures to manage information security risks
+  associated with the use of suppliers' products or services.
+  
+  This control requires exactly what CD measures: that the contractual
+  relationship accurately reflects the security requirements for the actual
+  scope of the supplier relationship.
+  
+  The ISO 27001:2022 implementation guidance for 5.19 specifies:
+  - Identify and document supplier categories
+  - Establish processes for new and existing supplier relationships
+  - Include information security requirements in contracts
+  - Monitor and review supplier performance against requirements
+  
+  A VEDS computation produces the monitoring and review evidence that 5.19
+  requires.
+
+CONTROL 5.20 — ADDRESSING INFORMATION SECURITY WITHIN SUPPLIER AGREEMENTS:
+  Requirement: specific information security requirements in agreements with
+  each supplier, including minimum security standards, right to audit, incident
+  notification requirements, personnel security, data handling requirements.
+  
+  This control maps to CD (Contract Drift) and OR (Obligation Recession).
+  The audit evidence for 5.20 conformance is:
+  - Current contract containing all required provisions (CD component: alignment)
+  - Evidence that the provisions were enforced in the audit period (OR component)
+  
+  A VEDS score with high CD and high OR provides strong 5.20 audit evidence.
+  A VEDS score with low CD or low OR exposes a 5.20 non-conformity.
+
+CONTROL 5.21 — MANAGING INFORMATION SECURITY IN THE ICT SUPPLY CHAIN:
+  Requirement: processes to manage information security risks associated with
+  the ICT product and service supply chain, including requirements to address
+  information security risks associated with the use of ICT products and services.
+  
+  This is the fourth-party opacity problem in ISO 27001 language. Control 5.21
+  requires the organization to understand and manage the risks from its vendors'
+  vendors (subprocessors, subservice organizations).
+  
+  The TO (Trust Opacity) component's Layer 2 (fourth-party opacity) is the gap
+  that 5.21 identifies. The acceptable response to 5.21 non-conformity is not
+  achieving zero opacity (impossible) but demonstrating that the organization:
+  - Understands the subprocessor landscape of critical suppliers
+  - Has contractual provisions requiring notification of subprocessor changes
+  - Has assessed the risk of key subprocessors that are visible
+
+CONTROL 5.22 — MONITORING, REVIEW AND CHANGE MANAGEMENT OF SUPPLIER SERVICES:
+  Requirement: regularly monitor, review and audit supplier service delivery
+  against agreements. Manage changes to provision of services including changes
+  to technology, changes in personnel, changes in processes.
+  
+  This is the closest ISO 27001 analog to the full VEDS model: ongoing monitoring
+  (TD), review against agreements (OR), and managing changes (CD, AD — because
+  changes to the vendor environment affect the accuracy of existing attestations).
+  
+  5.22 is the control that VEDS operationalizes. The VEDS quarterly computation
+  is the monitoring and review activity that 5.22 requires. The VEDS trend
+  analysis is the evidence that the monitoring produced actionable results.
+
+COMBINED ISO 27001:2022 MAPPING:
+
+  VEDS Component  → ISO 27001:2022 Control(s)
+  CD (Contract)   → 5.19, 5.20
+  AD (Attestation)→ 5.20, 5.22
+  TD (Telemetry)  → 5.22 (monitoring), 5.21 (fourth-party)
+  OR (Obligation) → 5.20 (enforcement), 5.22 (review)
+  TO (Opacity)    → 5.21 (supply chain), 5.22 (change management)
+
+An organization that implements VEDS and conducts quarterly VEDS assessments
+for Tier 1 and Tier 2 vendors has strong conformance evidence for all four
+controls across its critical vendor population.
+
+--------------------------------------------------------------------------------
+SECTION 6 — THE CLOSED-LOOP TIE-IN (PAPER 10 EXTENSION)
+--------------------------------------------------------------------------------
+
+Paper 10 (IR-GRC Closed Loop) defined four channels through which incident
+intelligence flows from IR into the risk register and the exception program:
+  Channel 1: risk register updates from incidents
+  Channel 2: detection gap documentation
+  Channel 3: control effectiveness record
+  Channel 4: threat profile updates
+
+Paper 12 (UPE) added Channel 5 for shadow AI discoveries.
+
+Vendor incidents require Channel 6 — the Vendor Incident Feedback Channel.
+This channel is architecturally distinct from the others because:
+  The incident did not originate inside the organization.
+  The evidence is primarily external (vendor disclosure, vendor IR report,
+    external notification from regulatory authority or third-party researcher).
+  The remediation may require contractual action against a third party,
+    not just internal control remediation.
+  The regulatory notification obligation may have a different triggering condition
+    (DORA: when the organization is affected; NIS2: when the organization "became aware").
+
+CHANNEL 6 — VENDOR INCIDENT FEEDBACK:
+
+TRIGGER: Any of the following activates Channel 6:
+  Vendor discloses a security incident
+  SIEM alerts on vendor account anomaly (Layer 1 or 2 telemetry)
+  Regulatory authority notifies organization of vendor breach
+  Third-party researcher or threat intelligence feed reports vendor breach
+  The organization discovers vendor breach through any other means
+
+STEP 1 — SCOPE DETERMINATION (within 4 hours, DORA-aligned):
+  Is the organization's data or systems affected?
+  Query: all vendor activity logs for the period of suspected breach.
+  Query: all data transfers from vendor to organization and vice versa.
+  Query: all changes made by vendor accounts/API keys in the organization's systems.
+  
+  Scope determination produces: affected data categories, affected systems,
+  estimated exposure period, estimated data subject count (for GDPR notification).
+
+STEP 2 — REGULATORY NOTIFICATION ASSESSMENT (within 4 hours):
+  Apply notification decision tree from Paper 12 (adapted for vendor incidents):
+  Does this meet DORA Art. 19 "major incident" criteria?
+  Does this meet NIS2 Art. 23 "significant incident" criteria?
+  Does this meet GDPR Art. 33 breach criteria?
+  Does this meet HIPAA, SOC 2, or other applicable criteria?
+  
+  If any answer yes: notification clock starts from "became aware."
+  Document: exactly when "became aware" — this timestamp is the regulatory anchor.
+
+STEP 3 — VEDS UPDATE (within 24 hours):
+  Immediately update VEDS components for the breached vendor:
+  TD: what telemetry gap failed to detect the incident? → TD decreases
+  AD: what attestation failed to cover the breached control area? → AD assessment
+  OR: what notification obligation was triggered? Was it met within SLA? → OR update
+  TO: what opacity factor prevented earlier detection? → TO assessment
+  
+  Compute new VEDS for the vendor. If VEDS < 0.1: activate vendor incident
+  response protocol (access suspension or increased monitoring pending investigation).
+
+STEP 4 — EXCEPTION REGISTER UPDATE (within 48 hours):
+  The vendor incident is a new entry in the exception register:
+  
+  Exception ID: VENDOR-[vendor_id]-[incident_date]
+  Type: Vendor Security Exception — Active Incident
+  Scope: all assets and data associated with vendor relationship
+  Authorization: none — this is an incident, not an accepted exception
+  Custodian: Vendor Risk Manager + Legal + DPO (if PII involved)
+  Compensation: increased telemetry monitoring + access review + vendor engagement
+  Review frequency: daily until incident resolved
+  EDS: computed from the incident's impact on each EDS component
+  
+  This entry creates the audit trail showing the organization responded to the
+  vendor incident as a governance event, not just as an IT problem.
+
+STEP 5 — RISK REGISTER UPDATE (within 5 business days):
+  Same as Paper 10's Channel 1 procedure:
+  
+  Class A (new risk): vendor incidents of this type were not previously in the
+    register → create new risk entry for "vendor supply chain compromise via
+    [attack vector]"
+  Class B (risk underrated): the vendor risk was in the register but rated
+    lower than this incident's impact justifies → update likelihood/impact
+  Class C (control failure): the vendor attestation and telemetry controls
+    failed to prevent or detect this → update control effectiveness record
+  Class D (correct rating): the risk was correctly rated and controlled —
+    the incident was detected and contained within acceptable parameters → validation
+
+STEP 6 — CONTRACT REMEDIATION (within 30 days):
+  Every vendor incident produces contract remediation items:
+  Notification SLA: was it met? If not: contract amendment required.
+  Audit rights: should they be exercised following this incident? If yes: invoke now.
+  Access restrictions: should vendor access be restricted pending security improvement?
+  VEDS floor: add a VEDS minimum requirement to the contract renewal.
+  
+  VEDS FLOOR CONTRACT LANGUAGE (proposed standard clause):
+  "Vendor shall maintain a Vendor Exception Decay Score (VEDS) of no less than
+   [0.3 / 0.4 / 0.5 depending on tier] as computed by [accepting organization]
+   quarterly using the VEDS methodology described in Exhibit [X]. Vendor shall
+   cooperate in providing the information necessary for VEDS computation. A VEDS
+   score below [floor] for two consecutive quarters constitutes a material contract
+   breach giving [accepting organization] the right to terminate with 30 days'
+   notice. Vendor shall notify [accepting organization] within [4/24/48] hours of
+   any security incident that may affect VEDS components."
+  
+  This clause converts VEDS from an internal risk tool into a contractual
+  standard that creates enforceable obligations. It is the contract equivalent
+  of Paper 9's EDS minimum for internal exceptions.
+
+LIS_VENDOR UPDATE (Loop Integrity Score extension):
+  Paper 10's Loop Integrity Score measured how completely incident intelligence
+  flows back through the four channels. Paper 12 extended it to LIS_privacy.
+  Channel 6 extends it further:
+  
+  LIS_vendor = LIS × (vendor_incidents_processed_through_channel6 / total_vendor_incidents)
+  
+  If vendor incidents are processed through Channel 6 correctly:
+    LIS_vendor ≈ LIS (channel 6 operating)
+  If vendor incidents are handled ad hoc outside the loop:
+    LIS_vendor < LIS (channel 6 absent, vendor incidents not feeding back into governance)
+
+--------------------------------------------------------------------------------
+SECTION 7 — THE CISO BOARD DASHBOARD (VEDS REPORTING)
+--------------------------------------------------------------------------------
+
+VEDS adds three metrics to the Paper 9 / Paper 11 / Paper 12 board dashboard:
+
+METRIC 1 — VENDOR RISK HEAT MAP (VRTM):
+  A two-axis visualization:
+    X-axis: VEDS score (0.0 to 0.8 max)
+    Y-axis: Vendor impact rating (1-5 scale: what happens if this vendor fails?)
+    Size of point: annual spend with vendor (proxy for integration depth)
+  
+  Board language: "Each point represents a vendor relationship. The lower-left
+  quadrant (low VEDS, high impact) represents our highest-priority vendor risks.
+  We currently have [N] vendors in this quadrant, representing approximately
+  [% of critical vendor spend]. Our target is to reduce this to [N] or fewer
+  within [timeframe] through the VEDS improvement roadmap."
+
+METRIC 2 — VENDOR ATTESTATION COVERAGE RATIO (VACR):
+  VACR = (Tier 1 vendors with AD > 0.5) / (total Tier 1 vendors)
+  
+  AD > 0.5 means the vendor has an attestation with less than 180 days of
+  audit period age — a reasonable minimum assurance threshold.
+  
+  Board language: "X% of our critical vendor relationships have attestations
+  that provide meaningful current assurance. The remaining Y% are operating
+  on attestations that are more than 180 days old. Each represents a gap in
+  our third-party assurance coverage."
+
+METRIC 3 — VENDOR INCIDENT NOTIFICATION COMPLIANCE (VINC):
+  VINC = (vendor incidents notified within contractual SLA) /
+         (total vendor incidents requiring notification)
+  
+  This is the OR component expressed as an outcome metric: not just "are
+  notification obligations in the contract" but "when an incident occurred,
+  was the obligation honored?"
+  
+  Board language: "In the last 12 months, we experienced [N] vendor security
+  incidents requiring notification under our contractual terms. Of these,
+  [VINC × N] were notified within the contractual SLA. The remaining [N × (1-VINC)]
+  were late or not notified. Late notifications create regulatory exposure under
+  DORA Art. 19 and NIS2 Art. 23 where the notification obligation exists at
+  the accepting organization level regardless of the vendor's notification delay."
+
+--------------------------------------------------------------------------------
+SECTION 8 — LIMITATIONS
+--------------------------------------------------------------------------------
+
+  - VEDS requires data from five sources (contract register, attestation archive,
+    SIEM telemetry, obligation tracker, opacity assessment). Most organizations
+    have this data in disconnected systems or do not track it systematically.
+    The implementation roadmap (Section 3.2) accounts for this, but the
+    practical data consolidation cost is significant and should not be
+    underestimated. VEDS computation is only as good as the underlying data.
+
+  - TO (Trust Opacity) is the component most resistant to objective measurement.
+    The formula uses opacity_fraction as the primary driver, but estimating
+    the total risk surface that is opaque requires judgment about what the
+    vendor's environment contains — information the organization does not have
+    by definition. Practical VEDS implementations should document the TO
+    estimation methodology and its assumptions explicitly.
+
+  - The VEDS floor contract clause (Section 6, Step 6) is proposed as standard
+    language. It has not been tested in litigation or regulatory proceedings.
+    Organizations implementing this clause should work with legal counsel to
+    ensure the clause is enforceable in the applicable jurisdictions and is
+    consistent with applicable regulatory requirements (particularly for
+    financial entities subject to DORA, where vendor contractual requirements
+    are prescribed in detail by Art. 30).
+
+  - Fourth-party risk (TO Layer 2) is treated in this paper as partially
+    addressed through contractual subprocessor notification obligations.
+    In practice, fourth-party risk requires either (a) direct vendor engagement
+    on fourth-party security standards or (b) industry-level information sharing
+    about shared critical vendors (the same cloud provider, the same identity
+    provider). Neither mechanism is mature for most industries. VEDS
+    acknowledges fourth-party opacity but does not solve it.
+
+  - DORA Art. 31's designation of "critical ICT third-party service providers"
+    for direct supervisory oversight was still being developed as of the
+    paper's writing date. The regulatory landscape for designated providers
+    will evolve and may impose additional obligations on accepting organizations
+    not fully captured here.
+
+--------------------------------------------------------------------------------
+SECTION 9 — WHAT I WOULD DO DIFFERENTLY
+--------------------------------------------------------------------------------
+
+  1. The canonical VET in Section 4.2 presents a single attack tree. Real supply
+     chain attacks are multi-variant — the SolarWinds attack tree had branches
+     for different victim environments, different attacker objectives, and different
+     post-exploitation paths. A full VET library for the five most common vendor
+     relationship types (MSP, SaaS, professional services, infrastructure, payment
+     processor) would make the attack tree model more immediately actionable.
+     Building that library is the highest-priority extension of this paper.
+
+  2. The VEDS floor contract clause needs a negotiation strategy. Most vendors
+     will not accept a VEDS-based termination right without either (a) knowing
+     what VEDS is and believing it is fair, or (b) being a vendor with high
+     bargaining power over the accepting organization. A negotiation approach —
+     how to introduce VEDS in a contract renewal, what concessions to expect,
+     what alternatives to offer when vendors refuse the direct VEDS floor —
+     would make the contract section significantly more practical.
+
+  3. The query for detecting vendor access anomalies (Layer 2, SPL query) uses
+     statistical anomaly detection (3 standard deviations). This threshold was
+     chosen for illustration. Production deployment requires environment-specific
+     calibration — in environments where vendors have highly variable legitimate
+     usage, the threshold may produce excessive false positives. A calibration
+     procedure should accompany the query in production deployment.
+
+  4. This paper focuses on the accepting organization's perspective. The
+     complementary paper — written from the vendor's perspective — would describe
+     how a vendor can improve its own VEDS score as presented by customers,
+     creating commercial incentives for vendors to maintain high VEDS scores.
+     The market mechanism (customers preferring vendors with higher VEDS) is the
+     most scalable way to improve supply chain security at industry scale.
+
+--------------------------------------------------------------------------------
+SECTION 10 — CONCLUSION
+--------------------------------------------------------------------------------
+
+The series began eight papers ago with a simple observation: governance failures
+create SOC blind spots. The failure happens before the detection gap. The detection
+gap exists because the governance failed to create the control the detection depends
+on.
+
+This paper takes that observation across the vendor boundary and arrives at the
+same structure — but with a multiplier.
+
+Inside your organization, you can observe the decay. The ELDM artifacts are in
+your systems. The phantom assets are in your inventory. The departed custodians
+are in your HR directory. The silent compensation rules are in your SIEM. You
+can run the Paper 9 audit procedure. You can compute EDS. You can bend the decay
+curve.
+
+In your vendor relationships, the decay is happening in a system you cannot
+access, at a rate you cannot observe, producing artifacts you cannot see. You
+receive periodic snapshots — the SOC 2 report, the ISO certificate, the
+questionnaire response — and you extend trust across the gap between snapshots.
+
+The attacker does not need to breach your organization. They need to breach your
+vendor — a smaller, less defended target — and then walk the trust relationship
+you established. The credentials you provisioned. The API key you issued. The
+network rule you opened. The service account you created. All of these are doors
+you built, keyed to the vendor, with locks the vendor holds. When the attacker
+takes the vendor's keys, your doors open.
+
+VEDS measures how well those doors are maintained. Contract Drift measures whether
+the door's specified use still matches its actual use. Attestation Drift measures
+how old the last inspection of the lock was. Telemetry Drift measures whether you
+can see the door from where you stand. Obligation Recession measures whether
+anyone is still responsible for calling you when the door opens unexpectedly.
+Trust Opacity measures the irreducible gap between what you can see and what
+is actually happening on the other side.
+
+The organizations that survive the next generation of supply chain attacks will
+not be the ones with the highest VEDS scores. Supply chain attacks will still
+succeed. They will be the ones with Channel 6 operating correctly — the ones
+who learn about the vendor incident through their own telemetry rather than from
+the news, who trigger their regulatory notification processes within hours rather
+than days, and who use every vendor incident to improve their VEDS scores for
+the next attack.
+
+The decay is happening. In your vendors' exception registers, right now, there
+are exceptions whose EDS is approaching zero. Some of those exceptions are in
+the systems your vendor uses to access your environment. You cannot see them decay.
+
+VEDS is the formula that makes the invisible decay visible from the outside.
+Channel 6 is the mechanism that feeds what you learn back into the governance
+program before the next vendor is compromised.
+
+Together, they are the supply chain extension of everything this series has built.
+
+--------------------------------------------------------------------------------
+SERIES CONNECTIONS
+--------------------------------------------------------------------------------
+  The decay model this paper extends across the vendor boundary:
+    "Exception Lifecycle Decay Model" (14-09-2026) — EDS extended to VEDS
+
+  The privacy obligations that vendor relationships create:
+    "The Privacy Governance Triad" (25-09-2026) — Art. 28 DPA requirements
+    "The Unsanctioned Processing Exception" (27-09-2026) — vendor AI processing
+
+  The structural assumptions vendor failures invalidate:
+    "The AI Security Failure Model" (30-09-2026) — SAVS and AI vendor risk
+
+  The closed-loop mechanism that Channel 6 extends:
+    "The IR-GRC Closed Loop" (Paper 10) — LIS_vendor extends LIS
+
+  The compliance debt that vendor exceptions contribute:
+    "Risk Acceptance Backdoors & Compliance Debt" (Paper 8) — CD_vendor
+    (vendor's own compliance debt transfers through supply chain)
+
+  The detection queries that build Layer 1 and Layer 2 telemetry:
+    "The Detection Paradox" (04-09-2026) — vendor detection rules age like others
+    "SOC-GRC Entropy Model" (07-09-2026) — vendor telemetry as entropy source
+
+--------------------------------------------------------------------------------
+END OF PAPER — hiro001-eth — 06-10-2026
+
+"Your vendor's decayed exceptions are your risk. You just cannot measure them
+because you are on the wrong side of the boundary. The VEDS formula is the
+instrument you read from where you stand. It does not eliminate the opacity.
+It makes the opacity legible — so you know what you are trusting,
+how old that trust is, and how much of it you can still see."
+================================================================================
+
+
+
+
+# The Vendor Exception Decay Problem — Part 2
+## What the Research Paper Didn't Say (But Should Have)
 
 ---
 
-## TL;DR
+### Before We Begin
 
-Every model I built before this one looked inward. The ELDM measures how your own exceptions rot. The IR-GRC Closed Loop measures how well your incident data feeds your own governance. But here is the thing I kept running into when I dug deeper: the most dangerous exceptions in most organizations are not the ones you signed. They are the ones your vendors signed, for risks in their environment, using your data, your integrations, and your network trust as the blast radius.
+The paper you just read is technically sound. It's rigorous, well-structured, and introduces a genuinely useful framework in VEDS. But here's the thing about research papers — they're written for a specific audience, in a specific voice, for a specific purpose. They're written to be cited, to be defensible, to sit in a regulatory filing or an academic database.
 
-I started pulling at that thread and could not stop.
+They're not written to be *felt*.
 
-This paper introduces the **Vendor Exception Decay Score (VEDS)**, the supply chain extension of EDS. Where EDS measures decay inside one organization, VEDS measures how that decay propagates outward across vendor tiers. The mechanism is the same four drifts from ELDM, but they now operate across organizational boundaries where you have no direct telemetry, no enforcement authority, and no visibility when the detection goes dark.
+And the vendor risk problem? It's not just an intellectual puzzle. It's a thing that keeps CISOs awake at 3 AM. It's a thing that makes GRC analysts stare at a SOC 2 report wondering if they're reading a description of current reality or a historical document. It's a thing that makes board members nod along to a presentation they don't fully understand while somewhere in a vendor's environment, an exception is quietly rotting.
 
-The math is a product of five components. Four are direct analogues of the ELDM drifts. The fifth is new: **Cascade Amplification**, the multiplier that reflects how deeply your vendors are nested into your own operations and how far the damage travels when one of them decays to zero.
+So what I want to do here is take the same concepts — the same VEDS model, the same five decay mechanisms, the same attack trees — and talk about them the way we'd talk about them if we were sitting across from each other at a conference, or on a call after a vendor just missed their second incident notification in a row, or in that moment when you realize the vendor you've trusted for four years has been running your data through systems you never approved.
 
-The practical output: a scoring model, an audit procedure, a SOAR integration schema, and a board-level framing for third party exception risk that does not rely on annual questionnaires.
-
----
-
-## Why I Went Down This Rabbit Hole
-
-I want to be honest about where this started.
-
-After writing the ELDM paper, I got a question that I could not answer well: if an exception inside your own organization decays on a predictable schedule because of scope drift, temporal drift, ownership drift, and detection drift, what happens when the exception is not yours? What happens when your most critical vendor has signed a risk waiver that covers the integration point between their environment and yours?
-
-I started mapping it out and realized the problem is not just the same. It is worse. In every dimension.
-
-When your own exception decays, you at least have the data. Your SIEM has telemetry on the asset. Your GRC platform owns the record. Your analysts, however overloaded they are, are in the same building or at least the same Slack workspace as the control that is failing. When a vendor exception decays, you have none of that. You have an annual questionnaire response that says "controls are in place." You have a contract clause that says they will notify you of material changes. You have a trust boundary that both sides agreed to maintain and neither side can measure in real time.
-
-And then somewhere in that trust boundary, something rots. And you do not find out until it shows up in a post-mortem.
-
-That is the problem this paper is about.
+Let's fill in the gaps.
 
 ---
 
-## The Central Question
+## Part 1: The Things Research Papers Don't Say Out Loud
 
-Let me put it plainly.
+### The Paper Is Polite. The Reality Isn't.
 
-You have fifty vendors. Some of them touch your most sensitive data. Some of them have direct API integrations into your production systems. Some of them run the software that processes your customer payments. And every single one of them has an exception register that you have never seen.
+When the paper says "you are accepting a vendor's exceptions on faith," it's being diplomatic. What it's actually saying is this:
 
-Some of those exceptions are fresh. Some are healthy. Some have compensating controls that actually work.
+You don't know what's happening inside your vendors' environments. Not really. The SOC 2 report tells you what an auditor saw during a sample period that ended months ago. The ISO certificate tells you what a certification body assessed against a control set that was designed before some of your current threats existed. The security questionnaire tells you what the vendor's security team believed about their own environment on the day they filled it out — or more accurately, what they wanted you to believe.
 
-And some of them have been silently decaying for 18 months, with a scope that now covers infrastructure you depend on, owned by people who left, compensated by a detection rule that stopped firing eight months ago, and authorized by an expiry date that passed without anyone noticing.
+The paper describes this as "Trust Opacity" and assigns it a variable (TO). But here's what a variable can't capture: the *unease*. The knowledge that somewhere in the vendor's infrastructure, there's a system with an unpatched vulnerability, or a service account with too much access, or a detection rule that's been silently broken for six months, and you have no way to know.
 
-Which vendors? Which exceptions? Which decay state? That is what the VEDS Model is designed to answer.
+The paper says TO can't reach 1.0 for any real vendor relationship. What it doesn't say is that TO often can't reach 0.5 either, no matter how mature your TPRM program is. The best you can do is shrink the opacity to a size where you can name it, measure it, and make a conscious decision about accepting it.
 
----
-
-## The Central Formula
-
-Everything in this paper builds toward one calculation. The Vendor Exception Decay Score:
-
-```
-VEDS(v, e, t) = VSIR(v,e,t) x VAL_n(v,e,t) x VCC(v,e,t) x VCL(v,e,t) x CA(v,e,t)
-
-VEDS = 1.0  --> Healthy vendor exception, verified compensating controls, current authorization
-VEDS = 0.0  --> Open attack surface across your supply chain boundary
-```
-
-| Component | Full Name | What It Measures | Healthy | Decayed |
-| :--- | :--- | :--- | :---: | :---: |
-| VSIR | Vendor Scope Integrity Ratio | Does the exception scope match what the vendor actually uses in your context? | 1.0 | Near 0 |
-| VAL_n | Vendor Authorization Lag (normalized) | Is the exception still within its authorized window? | 1.0 | Near 0 |
-| VCC | Vendor Custodial Continuity | Are the same people who signed this exception still responsible for it? | 1.0 | Near 0 |
-| VCL | Vendor Compensation Liveness | Is the compensating control actually detecting anything? | 1.0 | 0 |
-| CA | Cascade Amplification | How far does the blast radius reach if this vendor exception is exploited? | Low | High |
-
-The product form is deliberate. It reflects the same attacker logic as the original EDS. An attacker targeting your supply chain does not need all five components to fail. They only need one. And they will find the weakest one first.
-
-The fifth component, CA, is what separates VEDS from EDS. Inside your own organization, a decayed exception hurts you. Across your supply chain, a decayed vendor exception can hurt you, all of your vendor's other customers, and every downstream system that trusts the integration point that just became an open door.
+That's not failure. That's honesty. But the paper leaves you to figure that out on your own.
 
 ---
 
-## Part I: The Vendor Exception Lifecycle
+### The Five Decay Mechanisms Are Real, But They Don't Decay Equally
 
-### 1.1 What Even Is a Vendor Exception and Why Should You Care?
+The paper presents CD, AD, TD, OR, and TO as five components of a product formula. Mathematically elegant. Practically, they decay at wildly different rates, and understanding those rates changes how you prioritize.
 
-A vendor exception is a risk acceptance made by a third party, for their own internal risk governance, that affects your security posture.
+**Contract Drift (CD)** decays slowly. Contracts don't change overnight. The scope expansion that creates contract drift happens over months and years — a new integration here, an additional data field there, a service account created for a project that was supposed to last three months but is still running two years later. By the time CD hits 0.3, the relationship has usually been drifting for 18-24 months. The good news: slow decay means slow, manageable remediation. The bad news: slow decay is easy to ignore because nothing catastrophic happens on any given day.
 
-The most common ones I found when I started researching this are not dramatic. They are mundane. A vendor accepts the risk of not patching a legacy component because it would break your integration. A vendor accepts the risk of weaker authentication on the API account they use to connect to your system because adding MFA would require a code change that is not in scope for the current quarter. A vendor accepts the risk of logging gaps in the environment that processes your data because their SIEM does not cover that legacy subnet.
+**Attestation Drift (AD)** decays on a predictable schedule. SOC 2 reports age in a straight line from their audit period end date. ISO certificates decay in steps — full assurance at certification, partial assurance through surveillance audits, maximum staleness just before re-certification. Pentest reports decay fastest because the threat landscape moves faster than any other variable. The paper gives you formulas for all three. What it doesn't say is that most organizations treat all attestations as binary — current or expired — when the reality is a continuous gradient. A SOC 2 report that's 6 months old is meaningfully better than one that's 18 months old, even though both might pass a checkbox review. AD captures that gradient. Use it.
 
-Every one of those decisions is made by your vendor, documented in your vendor's GRC system, and invisible to you. And every one of them, if left unaddressed, will decay on the same schedule as your own exceptions, for the same reasons, except you will not see the signals.
+**Telemetry Drift (TD)** decays suddenly and then stays flat. Layer 1 coverage (access logging) is usually stable — either you're logging vendor VPN connections or you're not. Layer 2 coverage (action logging within sessions) is where the decay happens. A new integration goes live without corresponding alert rules. The vendor's API usage pattern shifts and the baseline goes stale. The SIEM rule that used to catch anomalous vendor behavior starts generating false positives, so someone tunes it, and now it catches nothing. TD doesn't decay gradually — it falls off a cliff when a specific integration outpaces its monitoring. This is why the paper's Layer 1/Layer 2/Layer 3/Layer 4 framework is useful: it forces you to ask not just "do we have telemetry?" but "do we have telemetry that actually tells us something?"
 
-### 1.2 The Five Stages of a Vendor Exception
+**Obligation Recession (OR)** decays with personnel changes. The paper mentions "owner_tenure_decay" but doesn't emphasize enough that this is the single biggest driver. When the person who negotiated the vendor contract leaves, the institutional knowledge of what security obligations exist and how they were supposed to be enforced leaves with them. The new relationship manager sees a vendor that "has always been fine" and doesn't want to create friction by requesting audit reports that stopped arriving 14 months ago. OR decay isn't a technical problem — it's a people problem, and it's the hardest to fix because it requires either rebuilding enforcement mechanisms or accepting that the contractual obligations you thought were protecting you have become decorative.
 
-```mermaid
-flowchart LR
-    VS0["Stage 0
-    DISCOVERY
-    Your vendor identifies a gap
-    in their environment that
-    affects your integration."]
-
-    VS1["Stage 1
-    VENDOR APPROVAL
-    Vendor risk committee accepts.
-    You may or may not be notified.
-    Usually: you are not."]
-
-    VS2["Stage 2
-    CONTRACT ACKNOWLEDGMENT
-    If you are lucky, this shows up
-    in a questionnaire response or
-    contract addendum. Often: silence."]
-
-    VS3["Stage 3
-    SILENT OPERATION
-    Exception is live in the vendor
-    environment. All four drifts begin.
-    You have no telemetry on any of it."]
-
-    VS4["Stage 4
-    RENEWAL OR ABANDONMENT
-    Vendor renews silently or the
-    exception becomes permanent by
-    neglect. You still do not know."]
-
-    VS5A["Stage 5A
-    CLEAN CLOSURE
-    Vendor remediates the gap.
-    Exception closes. Ideally they
-    tell you. Sometimes they do."]
-
-    VS5B["Stage 5B
-    YOUR INCIDENT
-    The decayed exception becomes
-    the attack vector. You find out
-    in the post-mortem. Too late."]
-
-    VS0 --> VS1 --> VS2 --> VS3 --> VS4
-    VS4 --> VS5A
-    VS4 --> VS5B
-
-    style VS0 fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
-    style VS1 fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
-    style VS2 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style VS3 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VS4 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VS5A fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style VS5B fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-```
-
-### 1.3 The Two Facts That Make This Worse Than the Internal Version
-
-**Fact 1:** Stage 3 is where all the decay happens. In the internal ELDM model, Stage 3 is the unmeasured interval between approval and incident. In the vendor model, you are not even measuring Stage 0 through 2 in most cases. You start blind and stay blind.
-
-**Fact 2:** The compensating control in the internal ELDM can be built by your own detection engineers, tested by your own SOC, and monitored in your own SIEM. The compensating control in a vendor exception is built by someone in an organization you do not control, tested against tooling you cannot audit, and monitored in a platform you have no access to. When VCL collapses to zero in a vendor context, you do not see the alert stop firing. You just stop receiving the assurance that was built on the assumption that it was firing.
-
-> [!IMPORTANT]
-> The fundamental asymmetry of vendor exception decay: you bear the blast radius of their control failure, but you have none of the telemetry that would tell you the control is failing.
+**Trust Opacity (TO)** doesn't decay — it's always there. The paper says TO sets a ceiling on VEDS below 1.0, which is correct. What it doesn't say is that TO is the component where your own risk appetite determines your target. Some organizations accept that their critical SaaS providers will always be partially opaque and focus their energy on TD — ensuring they can see what the vendor does in *their* environment, even if they can't see inside the vendor's. Other organizations invest heavily in contractual audit rights and exercise them aggressively, reducing TO at the cost of vendor relationship friction. Neither approach is wrong. But you have to choose, and you have to document that choice.
 
 ---
 
-## Part II: The Five Decay Mechanisms in Vendor Context
+### The Vendor Exception Tree Is Scarier Than It Reads
 
-Each mechanism from the internal ELDM has a vendor-specific form. The names are similar. The consequences are not.
+The paper presents the VET as a structured attack path model. It's technically accurate. But reading it in a research paper format makes it feel abstract. Let me translate.
 
-```mermaid
-flowchart TD
-    VEX["Vendor Exception Created
-    VEDS = 1.0
-    Day 0
-    Scope limited, authorized,
-    owned, compensated."]
+**The credential walk** — Branch Type 1 — is how most supply chain attacks actually work. Not through sophisticated zero-days. Not through elaborate social engineering of your employees. Through a vendor service account that was provisioned five years ago, scoped for a project that no longer exists, with local admin rights that were supposed to be temporary, on servers that have multiplied beyond what anyone tracked.
 
-    VEX --> VD1["VENDOR SCOPE DRIFT (VSIR)
-    Integration expands beyond
-    what the exception covered.
-    Your data is now in scope
-    of an unreviewed waiver."]
+The attacker doesn't need to be sophisticated if your vendor access hygiene is poor. They need to find a vendor with weak internal security (which most have, because security investment scales with company size and most vendors are smaller than you), compromise that vendor's environment, and then use the trust relationship you established. The credential walk is just lateral movement through a door you built.
 
-    VEX --> VD2["VENDOR TEMPORAL DRIFT (VAL_n)
-    Authorization window closes.
-    Nobody notified you.
-    The API keeps calling. The
-    exception keeps being applied."]
+The paper's description of the suppression exception is particularly important. When the attacker moves laterally using a vendor service account, the EDR *does* fire. But the alert is suppressed because "the vendor always does this during maintenance." That suppression exception was created two years ago by someone who has since left the organization. The exception's EDS score — if anyone bothered to compute it — would be near zero. But no one has looked at it because vendor service account behavior is "normal." The attacker has 247 days of unobserved access. This isn't hypothetical. This is the actual post-mortem of multiple real-world breaches.
 
-    VEX --> VD3["VENDOR OWNERSHIP DRIFT (VCC)
-    The vendor account manager
-    who managed this exception
-    left. The replacement inherited
-    the ticket. Not the context."]
+**The update distribution** — Branch Type 2 — is the one that should terrify you the most, because it's the hardest to defend against. Your defenses are built to stop malicious code. They're not built to stop malicious code signed with a legitimate certificate, distributed through a legitimate update channel, from a vendor you've explicitly trusted. The SolarWinds attackers understood this. The 3CX attackers understood this. The MOVEit attackers understood this. The paper describes the telemetry gap (Layer 3 — you can't see the vendor's build pipeline) and the attestation gap (SOC 2 doesn't cover build pipeline security), but what it doesn't emphasize enough is the *helplessness*.
 
-    VEX --> VD4["VENDOR DETECTION DRIFT (VCL)
-    Their compensating control
-    quietly stops working.
-    Their SOC does not notice.
-    You never had visibility."]
+If your vendor's build pipeline is compromised, you will deploy their malicious update. There is no control you can implement in your environment that reliably distinguishes between a legitimate update and a compromised one, because the compromise happened upstream of every signal you can observe. Your only defenses are: vendor diversity (if one vendor is compromised, not all are), network segmentation (limits what the malicious update can reach), and rapid detection (once the payload activates, how fast do you know?). The paper gives you the framework for measuring vendor risk. It doesn't give you the framework for accepting that some vendor risk is genuinely unmitigable.
 
-    VD1 --> CASCADE
-    VD2 --> CASCADE
-    VD3 --> CASCADE
-    VD4 --> CASCADE
-
-    CASCADE["CASCADE AMPLIFICATION (CA)
-    VEDS = VSIR x VAL_n x VCC x VCL x CA
-    Your blast radius across
-    the supply chain tier."]
-
-    CASCADE --> R1["YOUR SOC
-    Alert suppression covers
-    assets in the vendor
-    decayed scope."]
-
-    CASCADE --> R2["YOUR IR TEAM
-    Post-mortem traces breach
-    to a vendor exception that
-    expired 14 months ago."]
-
-    CASCADE --> R3["YOUR GRC
-    Vendor questionnaire said
-    controls in place. Nobody
-    tested for liveness."]
-
-    CASCADE --> R4["YOUR CISO
-    Third party risk score
-    looks green. The exception
-    in the vendor register is red."]
-
-    CASCADE --> R5["YOUR CUSTOMERS
-    Their data moved through
-    a trust boundary that nobody
-    was watching on either side."]
-
-    style VD1 fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC
-    style VD2 fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC
-    style VD3 fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC
-    style VD4 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style CASCADE fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style R1 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style R2 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style R3 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style R4 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style R5 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-```
+**The API abuse** — Branch Type 3 — is the quiet one. No alerts fire. No anomalous access patterns. The attacker uses the vendor's legitimate API key to access exactly the data the vendor is authorized to access, at a volume that matches normal usage. The only way to detect this is Layer 2 telemetry with calibrated baselines, and most organizations don't have that. The paper's SPL query for anomalous data volume is a starting point, but it assumes you have a baseline, which assumes you've been logging vendor API activity at a granular enough level to establish what "normal" looks like. If you haven't, you're blind to this attack path, and you'll stay blind until the data shows up somewhere it shouldn't.
 
 ---
 
-### 2.1 Vendor Scope Drift (VSIR)
+## Part 2: The Things the Paper Glosses Over
 
-**What it is:** The vendor exception covers a specific component of their environment. Over time, the integration expands, their environment grows, or the component gets cloned, migrated, or shared with a subcontractor. The exception scope no longer matches what is actually operating under its authorization.
+### The Contract Drift Query Has a Problem
 
-The difference from internal scope drift is access. When your own exception scope drifts, you can run an asset query and find the phantoms. When a vendor exception scope drifts, you see their questionnaire answer from last quarter that says "our scope is correctly bounded."
+The SQL query for vendor credentials not in contract registry is useful, but it has a hidden assumption: that `vendor_credentials` and `vendor_contracts` use the same vendor name. In practice, they don't. Legal knows the vendor as "Acme Solutions Inc." The credential store knows it as "acme-sso-prod." The contract registry knows it as "ACME_SOLUTIONS_2024_MSA." The GRC platform knows it as "Vendor ID 4728."
 
-**How it actually happens:**
+Before you can run that query, you need a vendor identity resolution process. This is unsexy work. It's also the work that determines whether your VEDS computation is based on reality or on a join that silently fails and returns empty results that you interpret as "no findings."
 
-- The vendor payment processing API was excepted from a specific logging requirement. Then they migrated the payment processor to a shared services cluster. The cluster runs the excepted logic alongside ten other client integrations. The exception now implicitly covers processing for clients who never agreed to the risk.
-- The vendor development environment was excepted from full encryption at rest because it contained only synthetic data. Then a junior engineer connected it to a production dataset for a demo. The exception scope string still says "non-production environments only."
-- The vendor signed an exception for a specific legacy integration point. They rebuilt the integration and kept the exception applied to the new implementation without re-approval, because nobody thought the exception was tied to the architecture it was written for.
-
-**What you lose:** Your trust boundary was defined by the exception original scope. When that scope drifts without your knowledge, you are operating under a risk posture that does not match reality. Every security decision you made about that vendor was based on a scope that no longer exists.
-
-**Measure:**
-
-```
-VSIR(v,e) = |assets_in_vendor_environment_matching_scope INTERSECT assets_originally_approved|
-             -------------------------------------------------------------------------------------
-                          |assets_currently_operating_under_exception_coverage|
-
-A Vendor Scope Phantom is any asset operating in the vendor environment that:
-  a) Falls within the exception scope string by current interpretation, AND
-  b) Was not explicitly included in the original approved scope, AND
-  c) Touches your integration boundary, your data, or your trust chain.
-
-VSIR approaches 0 as vendor scope phantoms accumulate.
-You cannot compute this without vendor cooperation or direct evidence from integration telemetry.
-```
-
-**The detection signal you actually have:** Integration logs. If the vendor API call patterns shift, if new source addresses appear, if data volumes on the integration channel change in ways that are inconsistent with the approved scope of the underlying connection, you are looking at scope drift from the outside. Most organizations are not looking.
-
-```mermaid
-flowchart LR
-    VAPPROVED["Vendor Exception
-    Approved Scope:
-    payment-api-v1 only
-    VSIR = 1.0"]
-
-    VMIG["Month 4: Vendor migrates
-    payment-api-v1 to shared cluster.
-    New source: shared-cluster-prod.
-    Exception not re-scoped."]
-
-    VPHAN1["Your integration now touches
-    shared-cluster-prod, which runs
-    ten other client workloads.
-    Scope phantom created."]
-
-    VSUB["Month 8: Vendor subcontractor
-    gets read access to shared cluster.
-    Your data is now reachable from
-    an org you never assessed."]
-
-    VPHAN2["Subcontractor operates under
-    vendor exception they did not sign.
-    VSIR approaches 0.3.
-    You have no visibility."]
-
-    VAPPROVED --> VMIG --> VPHAN1
-    VPHAN1 --> VSUB --> VPHAN2
-
-    style VAPPROVED fill:#1E293B,stroke:#3B82F6,color:#F8FAFC
-    style VMIG fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VPHAN1 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style VSUB fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VPHAN2 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-```
+The paper doesn't mention this because research papers don't talk about data hygiene. But if you're actually implementing VEDS, vendor identity resolution is Phase 0, and it's usually the longest phase.
 
 ---
 
-### 2.2 Vendor Temporal Drift (VAL_n)
+### Attestation Drift's Harmonic Mean Is Right, But the Interpretation Matters
 
-**What it is:** The vendor exception has an expiration date. That date passes. The risk-causing behavior continues. Nobody told you.
+The paper uses harmonic mean for combining SOC 2, ISO 27001, and pentest AD scores. This is mathematically sound — it prevents a fresh attestation in one category from masking a stale attestation in another.
 
-This is the most common form of vendor exception decay I kept finding in my research. Not because organizations are negligent, but because the default state of every exception is "continue operating" and the default state of every busy GRC team is "renewal approved, next." The combination produces exceptions that outlive their authorization by years while the integration they cover runs uninterrupted.
+But here's what the paper doesn't say: the *interpretation* of the combined AD score depends on which attestation is stale.
 
-The internal version of temporal drift is bad because authorization lapses without human review. The vendor version is worse because you were not part of the authorization to begin with, so you have no mechanism to detect the lapse.
+A vendor with a fresh SOC 2 but a 2-year-old pentest has a specific risk profile: their operational controls are probably fine (SOC 2 covers that), but you have no recent evidence about their vulnerability management or external attack surface. This is different from a vendor with an aging SOC 2 but a fresh pentest: their external attack surface is probably fine, but their internal operational controls may have drifted.
 
-**How this actually plays out:**
-
-A vendor signs a 90-day exception to accommodate a delayed patch cycle during a platform migration. The migration finishes, but the patching is deprioritized because the system is "stable." The 90 days pass. The vendor GRC team sends an internal reminder. The system owner files a renewal request with a new expiry. That renewal gets approved in a five-minute meeting. The cycle repeats three more times. By month 18, the exception is permanent by operational habit, the original justification is irrelevant, and you have been running an integration against an unpatched system for 18 months under an authorization that expired 15 months ago.
-
-Nobody called you. Nothing in your systems flagged it. Your annual questionnaire response for that vendor says "all exceptions are reviewed on a 90-day cycle." That is technically true. The review said "approved." It just forgot to say "for the 12th time in a row."
-
-**Measure:**
-
-```
-VAL(v,e) = max(0, days_since(expiry(vendor_exception_e))) when no extension covers current date
-VAL = 0                                                   when a valid extension exists in vendor system
-
-VAL_n = 1 / (1 + VAL/90)   normalized form for VEDS calculation
-
-You cannot compute this directly without access to the vendor exception register.
-Proxy measurement: contract-based expiry language enforcement and vendor self-reported status.
-The honest truth: most organizations are measuring vendor authorization state on a 12-month
-questionnaire cycle, for exceptions that can expire and be renewed multiple times within that window.
-```
-
-**The renewal chain problem is worse at the vendor level:**
-
-```mermaid
-graph LR
-    VR0["Day 0
-    Exception signed.
-    90-day window.
-    Vendor notifies you.
-    Rare, but it happens."]
-
-    VR1["Day 90
-    First renewal.
-    Internal only.
-    No external notification.
-    You are unaware."]
-
-    VR2["Day 180
-    Second renewal.
-    New owner approves.
-    Original justification
-    references decommissioned system."]
-
-    VR3["Day 270
-    Third renewal.
-    Approved in 4 minutes.
-    Same as last time."]
-
-    VR4["Day 450
-    You run your annual
-    vendor assessment.
-    Questionnaire says:
-    Exception reviewed quarterly.
-    Both things are true.
-    Neither is what you needed to know."]
-
-    VR5["Day 540
-    Attacker discovers
-    the unpatched system.
-    Your data.
-    Their access.
-    Your incident."]
-
-    VR0 --> VR1 --> VR2 --> VR3 --> VR4 --> VR5
-
-    style VR0 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style VR1 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style VR2 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VR3 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style VR4 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style VR5 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-```
+The harmonic mean gives you a single number. The paper should tell you to also look at the *pattern* — which attestations are fresh and which are stale — because the remediation path differs depending on what's missing.
 
 ---
 
-### 2.3 Vendor Ownership Drift (VCC)
+### The Telemetry Drift Formula Is Overly Simplified
 
-**What it is:** The people who understood the exception, who knew why it existed, who knew what the compensating control was supposed to do, have left or moved on. Their replacements inherited a ticket. Not the context. Not the worry. Not the institutional memory of why this was flagged as a risk in the first place.
+The paper's TD formula is:
 
-In the internal ELDM, I described ownership drift as the mechanism by which exceptions become unowned. In the vendor context, ownership drift has an additional layer: not only does the exception become unowned inside the vendor, but your relationship with whoever owned it is now broken too. The account manager who briefed you on the exception is now at a different company. The security contact you had is gone. You are talking to someone new who tells you everything is fine because that is what the ticket says.
+`TD(v,t) = (layers_with_meaningful_coverage / 4) × (1 - integration_depth_delta × coverage_lag_rate)`
 
-**The three places ownership drift hits hardest in vendor relationships:**
+This works as a heuristic, but it has a problem: it treats all four layers as equally valuable, when in practice they're not.
 
-First is the vendor own internal ownership. The security engineer who built the compensating control left. Their replacement does not know the control exists. It continues running. Nobody tests it. Nobody knows it needs testing.
+For most organizations, Layer 1 (access logging) and Layer 2 (action logging) are where the detection value lives. Layer 3 (vendor-side logging) is aspirational — you're not going to get it from most vendors, and the ones who provide it often provide it through a portal you have to manually check, which makes it useless for real-time detection. Layer 4 (fourth-party visibility) is essentially nonexistent for most industries.
 
-Second is the boundary owner on your side. The person at your organization who was the relationship owner for this vendor, who attended the briefings, who understood the risk posture, has moved to a different role. Their replacement inherited the vendor relationship along with forty others and treats the questionnaire as the source of truth.
+A better formulation would weight the layers:
 
-Third is the contractual layer. The exception language exists in a vendor contract or MSA addendum. The legal team that negotiated it is different from the security team that needs to enforce it. The clause says the vendor must notify you of material changes to their exception status. Nobody on either side knows who is responsible for sending or receiving that notification today.
+`TD(v,t) = (w1 × L1_coverage + w2 × L2_coverage + w3 × L3_coverage + w4 × L4_coverage) × (1 - lag_factor)`
 
-**Measure:**
+Where w1 and w2 are high (0.4 each, for example), w3 is low (0.15), and w4 is negligible (0.05). This reflects the reality that Layer 1 and Layer 2 telemetry is where you'll actually detect vendor-related incidents, and it prevents an organization with good Layer 1/2 coverage from being penalized for lacking Layer 3/4 visibility that no one in their industry has either.
 
-```
-VCC(v,e) = fraction of {vendor_security_contact, vendor_exception_owner, your_vendor_relationship_owner,
-            your_third_party_risk_manager} roles occupied by the same person (or documented
-            successor with verified briefing) as at original exception documentation.
-
-VCC decays at every personnel transition on both sides of the relationship.
-A VCC below 0.5 means the exception is effectively unowned on at least one side
-of the boundary that matters.
-```
-
-**What unowned vendor exceptions look like in practice:**
-
-```mermaid
-flowchart TD
-    CREATION["Exception Created
-    Four people understand it:
-    1. Vendor security engineer
-    2. Vendor GRC owner
-    3. Your vendor manager
-    4. Your third party risk lead
-    VCC = 1.0"]
-
-    Y1["Year 1
-    Vendor security engineer leaves.
-    Replacement hired.
-    No formal briefing documented.
-    VCC drops to 0.75."]
-
-    Y2["Year 2
-    Your vendor manager moves to a different role.
-    New manager takes over.
-    No exception-specific handoff.
-    VCC drops to 0.50."]
-
-    Y3["Year 3
-    Vendor GRC owner promoted.
-    Exception ticket reassigned automatically by the system.
-    No human review.
-    VCC drops to 0.25."]
-
-    Y4["Year 4
-    Your third party risk lead goes on extended leave.
-    Coverage is split across team.
-    Exception is nobody priority.
-    VCC approaches 0.0."]
-
-    INCIDENT["Incident.
-    Post-mortem traces it to the vendor exception.
-    Nobody on either side can explain why it exists.
-    Nobody is accountable.
-    VCC was predicting this."]
-
-    CREATION --> Y1 --> Y2 --> Y3 --> Y4 --> INCIDENT
-
-    style CREATION fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style Y1 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style Y2 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style Y3 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style Y4 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-    style INCIDENT fill:#7F1D1D,stroke:#F87171,color:#F8FAFC,stroke-width:3px
-```
+The paper's formula isn't wrong — it's just not calibrated to how detection actually works.
 
 ---
 
-### 2.4 Vendor Detection Drift (VCL)
+### Obligation Recession Needs a "Who Cares?" Metric
 
-**What it is:** The compensating control that the vendor implemented to make the exception safe stops working. Quietly. Without anyone noticing. On their side or yours.
+The paper measures OR as the ratio of actively enforced obligations to total contractual obligations. This is useful. But it doesn't capture the *materiality* of the obligations that have receded.
 
-This is the drift that matters most. It is the one that collapses VEDS to zero regardless of what the other components look like. And in the vendor context, it is essentially undetectable through normal third party risk management channels.
+A vendor contract might have 47 security obligations. If the ones that have receded are "vendor will provide annual security awareness training completion statistics" and "vendor will notify accepting organization of changes to its subprocessor list," that's different from if the ones that have receded are "vendor will notify accepting organization of security incidents within 24 hours" and "vendor will maintain cyber insurance with minimum coverage of $X."
 
-Here is the scenario I kept reconstructing: A vendor accepts the risk of a configuration weakness. In exchange, they commit to a compensating control. Maybe it is enhanced monitoring on the affected component. Maybe it is a weekly vulnerability scan with results reported to your team. Maybe it is a specific SIEM rule that alerts on anomalous activity in the excepted zone.
+OR should be weighted by obligation criticality:
 
-They build it. It works. They document it. Your questionnaire asks about it. They say yes. You mark the control as verified.
+`OR(v,t) = Σ(criticality_weight × enforcement_status) / Σ(criticality_weight)`
 
-Then, six months later, the SIEM rule stops matching because the asset hostname changed after a routine infrastructure refresh. The rule runs every night. It matches nothing. No alert fires. On both their dashboard and the dashboard they show you, the rule is listed as "active and operational." Both of those statements are technically accurate. Neither of them means the control is working.
+Where criticality_weight is high for notification obligations, incident response obligations, and access control obligations; medium for attestation delivery and audit rights; and low for reporting and documentation obligations.
 
-**The three failure modes in vendor detection drift:**
-
-- **Rule rot:** The compensating detection logic references specific infrastructure identifiers that changed. The rule keeps running. It finds nothing. Nobody notices because "nothing to find" looks the same as "nothing happening."
-- **Telemetry rot:** The log source the rule depends on stopped shipping. Agent update, configuration change, license expiry. The vendor internal SOC may or may not have noticed. You definitely have not.
-- **Disposition rot:** The rule still fires. But the vendor analysts have learned to close those alerts because the system owner told them the exception covers this behavior. The compensating control triggers an alert. The alert gets closed. Your data continues flowing through an unmonitored gap.
-
-**Measure:**
-
-```
-VCL(v,e) = vendor_input_liveness x vendor_match_liveness x vendor_disposition_liveness
-
-vendor_input_liveness      = are the log sources feeding the compensating rule actually shipping?
-                             (verified, not self-reported)
-vendor_match_liveness      = does a coverage test produce a fired alert?
-                             (run by vendor, observed by you via shared evidence)
-vendor_disposition_liveness = of alerts the rule generates, what fraction reach human review
-                              rather than auto-closure?
-
-VCL = 1.0 only if all three are independently verified.
-The honest default for most vendor relationships: VCL is unknown.
-Unknown VCL should be treated as VCL = 0 for VEDS scoring purposes.
-```
-
-> [!WARNING]
-> If you cannot independently verify that a vendor compensating control is live, you cannot claim it as a mitigating factor in your risk posture. An unverified compensating control is not a control. It is documentation of an intention.
-
-```mermaid
-flowchart TD
-    VCOMPCTL["Vendor Compensating Control
-    Committed to at exception approval
-    VCL = 1.0
-    Annual questionnaire: In place."]
-
-    VCOMPCTL --> VRULEROT["Rule Rot
-    Hostname in the rule changed
-    after infrastructure refresh.
-    Rule matches nothing.
-    Still listed as active."]
-
-    VCOMPCTL --> VTELROT["Telemetry Rot
-    Log source stopped shipping
-    after SIEM license tier change.
-    Input: silent.
-    Dashboard: green."]
-
-    VCOMPCTL --> VDISPROT["Disposition Rot
-    Vendor analysts close alerts
-    because exception owner told
-    them this behavior is approved.
-    Alert fires. Gets closed. Repeat."]
-
-    VRULEROT --> VDEAD
-    VTELROT --> VDEAD
-    VDISPROT --> VDEAD
-
-    VDEAD["VCL = 0
-    Control appears operational.
-    Vendor questionnaire: Active.
-    Contract clause: Compensated.
-    Actual coverage: zero.
-    VEDS collapses to 0."]
-
-    VDEAD --> VATTACK["Attacker sees an integration
-    point with zero compensating
-    detection and a signed exception
-    that says someone else is watching.
-    Nobody is watching."]
-
-    style VCOMPCTL fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style VRULEROT fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VTELROT fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VDISPROT fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style VDEAD fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style VATTACK fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-```
+This makes OR more actionable: instead of "40% of obligations have receded," you get "the notification obligation, which is the one that matters most during an incident, hasn't been tested in 18 months."
 
 ---
 
-### 2.5 Cascade Amplification (CA) — The New Component
+### Trust Opacity Needs a "What Would Change It?" Question
 
-This is the one that does not exist in the internal ELDM. And it is what makes the vendor exception decay problem categorically different from the internal version.
+The paper defines TO as the ratio of opaque risk surface to total risk surface. This is a useful construct. But it doesn't ask the follow-up question: what would reduce this opacity?
 
-**What it is:** A measure of how deeply the vendor exception is embedded into your operations, and how many downstream systems, processes, and trust relationships would be affected if that exception became an attack vector.
+For some opacity, the answer is "nothing you can do" — you will never have full visibility into your vendor's internal incident detection timeline. For other opacity, the answer is "exercise your audit rights" or "require the vendor to provide Layer 3 telemetry as a contractual obligation" or "participate in an industry information-sharing group for this vendor category."
 
-An exception in your own environment fails and hurts you. An exception in a critical vendor environment fails and can hurt you, all of your vendor other customers, their other clients who share the same platform, and any downstream system that trusted the integration point that just became an open door.
-
-**How CA is calculated:**
-
-CA is not a single number. It is a weighted composite of four factors:
-
-```
-CA(v,e) = f(Integration_Depth, Data_Sensitivity, Vendor_Tier, Shared_Exposure)
-
-Integration_Depth (ID):
-  How many of your critical systems have direct dependencies on the integration
-  covered by this exception?
-  Scale 1-5: 1 = isolated non-critical system, 5 = core production dependency
-
-Data_Sensitivity (DS):
-  What classification level of your data transits the integration this exception covers?
-  Scale 1-5: 1 = public data only, 5 = PII, financial records, health data, IP
-
-Vendor_Tier (VT):
-  Is this a direct vendor (Tier 1) or a vendor's vendor (Tier 2+)?
-  Tier 1: direct contract, some visibility. Scale multiplier: 1.0
-  Tier 2: subcontractor. Scale multiplier: 1.5
-  Tier 3+: you may not even know they exist. Scale multiplier: 2.0+
-
-Shared_Exposure (SE):
-  Does this vendor serve other clients using the same infrastructure as yours?
-  A compromise that starts at your integration point may propagate horizontally
-  to every other client sharing that platform.
-  Scale 1-5: 1 = dedicated environment, 5 = fully shared multi-tenant infrastructure
-```
-
-The CA score ranges from 1 (low amplification, contained blast radius) to 10+ (high amplification, cross-client systemic risk). It multiplies the base VEDS score, meaning a highly embedded vendor with a decayed exception has a dramatically higher risk contribution than a peripheral vendor with the same level of exception decay.
-
-```mermaid
-graph TD
-    EXCEPTION["Vendor Exception Decays
-    VSIR=0.7, VAL_n=0.4, VCC=0.5, VCL=0.0
-    Base VEDS without CA context = 0.0"]
-
-    EXCEPTION --> LOW_CA["Low CA Scenario
-    Integration Depth: 1
-    Data Sensitivity: 1
-    Vendor Tier: 1
-    Shared Exposure: 1
-    CA = 1.0
-    Risk contained to one
-    non-critical integration."]
-
-    EXCEPTION --> MED_CA["Medium CA Scenario
-    Integration Depth: 3
-    Data Sensitivity: 3
-    Vendor Tier: 1
-    Shared Exposure: 3
-    CA = 4.5
-    Customer data at risk.
-    Three internal systems affected.
-    Moderate cross-client exposure."]
-
-    EXCEPTION --> HIGH_CA["High CA Scenario
-    Integration Depth: 5
-    Data Sensitivity: 5
-    Vendor Tier: 2
-    Shared Exposure: 5
-    CA = 10.0+
-    Core production at risk.
-    PII and financial data transiting.
-    Subcontractor of subcontractor.
-    Dozens of co-tenants exposed.
-    Supply chain systemic event."]
-
-    style EXCEPTION fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style LOW_CA fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style MED_CA fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style HIGH_CA fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-```
+The practical use of TO isn't just to compute a number — it's to identify which opacity is reducible and which isn't, and then to focus your energy on the reducible parts.
 
 ---
 
-## Part III: The Supply Chain Decay Timeline
+## Part 3: What to Do With This That the Paper Doesn't Tell You
 
-### 3.1 How a Single Vendor Exception Becomes Your Incident in 28 Months
+### Start With the Vendors That Matter
 
-I built this timeline the same way I built the 39-month internal decay timeline. Every person in this story behaved reasonably. Every decision made sense in the moment it was made. The incident at the end was structurally predictable.
+The paper's implementation roadmap (Section 3.2) suggests a four-phase rollout over 6 months for Tier 1 and Tier 2 vendors. This is reasonable. But if you're reading this and thinking "I don't have 6 months," here's the shortcut:
 
-| Month | Event | VSIR | VAL_n | VCC | VCL | CA | VEDS |
-|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **0** | Vendor exception approved. Compensating control built. You receive notification. | 1.00 | 1.00 | 1.00 | 1.00 | 2.0 | **1.00** |
-| **2** | Vendor migrates excepted component to shared cluster without re-scoping. | 0.80 | 1.00 | 1.00 | 0.95 | 3.5 | 0.72 |
-| **4** | Vendor security engineer who built the compensating control leaves. No formal handoff. | 0.80 | 1.00 | 0.75 | 0.90 | 3.5 | 0.49 |
-| **6** | First exception renewal. Internal only. No external notification to you. | 0.80 | 1.00 | 0.75 | 0.80 | 3.5 | 0.43 |
-| **9** | SIEM rule in vendor environment stops matching after infrastructure refresh. | 0.75 | 1.00 | 0.75 | 0.00 | 3.5 | **0.00** |
-| **12** | Your annual vendor questionnaire. Vendor reports "all compensating controls active." True in documentation. False operationally. | 0.70 | 1.00 | 0.75 | 0.00 | 4.0 | 0.00 |
-| **14** | Your vendor relationship manager moves to a new role. New manager takes over without exception briefing. | 0.70 | 1.00 | 0.50 | 0.00 | 4.0 | 0.00 |
-| **18** | Second renewal. Exception now 18 months old. Original justification references a migration that finished in month 3. | 0.65 | 0.70 | 0.50 | 0.00 | 4.0 | 0.00 |
-| **21** | Vendor adds subcontractor with access to the shared cluster. You are not informed. CA increases. | 0.55 | 0.55 | 0.50 | 0.00 | 6.0 | 0.00 |
-| **24** | Attacker identifies the excepted integration point through passive reconnaissance of vendor public-facing infrastructure. | 0.55 | 0.40 | 0.33 | 0.00 | 6.0 | 0.00 |
-| **28** | **YOUR INCIDENT.** Attacker used the vendor unmonitored integration to access your environment. Post-mortem: "third party compromise." | -- | -- | -- | -- | -- | -- |
+Start with your top 10 vendors by impact. Not by spend — by impact. The vendor whose failure would stop your operations, expose your data, or trigger regulatory notification. For most organizations, that's: cloud infrastructure provider, identity provider, primary SaaS platform, payment processor, and managed security service provider (if you have one).
 
-**The key observation:** VEDS collapses to zero at month 9, the moment VCL hits zero. Everything after that is just time passing while the open door waits for someone to find it. The attacker did not need to find a zero-day. They needed to find the vendor, read the public infrastructure signals that a legacy component was running, probe the integration boundary, and walk through.
+Compute VEDS for those 10 vendors first. You'll have partial data. You'll have to estimate TO. You'll find that CD and AD are computable from documents you already have, TD requires a conversation with your SOC, and OR requires a conversation with whoever manages the vendor relationship.
 
-### 3.2 The Decay Curve Across Vendor Tiers
-
-The internal ELDM showed a single curve from EDS = 1.0 to incident. The vendor version has multiple curves running in parallel, one per vendor tier, with cascade amplification connecting them.
-
-```mermaid
-graph TD
-    T0["Your Organization
-    Internal EDS managed.
-    You have visibility here.
-    IR-GRC Closed Loop running."]
-
-    T0 --> T1A["Tier 1 Vendor A
-    VEDS actively tracked.
-    Contract has exception language.
-    Questionnaire responses on file.
-    Liveness testing: annual."]
-
-    T0 --> T1B["Tier 1 Vendor B
-    VEDS not explicitly tracked.
-    General vendor risk score.
-    Exception register: unknown.
-    Questionnaire: Controls in place."]
-
-    T1A --> T2A["Tier 2: Vendor A
-    Infrastructure Provider
-    You know this org exists.
-    You have never assessed them.
-    They process your data via A."]
-
-    T1A --> T2B["Tier 2: Vendor A
-    Subcontracted SOC
-    You did not know this existed
-    until after the incident.
-    They had alert suppression rules
-    covering your data flows."]
-
-    T1B --> T2C["Tier 2: Vendor B
-    Cloud Provider
-    Multi-tenant environment.
-    Several of their exceptions
-    are cloud config waivers.
-    CA = 8."]
-
-    T2C --> T3["Tier 3: The provider
-    your vendor's vendor uses.
-    You absolutely did not
-    know this chain existed.
-    Neither did your legal team.
-    The contract clause stops at Tier 1."]
-
-    style T0 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style T1A fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style T1B fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style T2A fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style T2B fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style T2C fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style T3 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-```
+The first 10 VEDS computations will take 2-3 weeks and will surface findings that justify the full program. The paper's roadmap is correct, but it's written for organizations that need a structured rollout. If you need to demonstrate value fast, start with the 10 vendors that matter most.
 
 ---
 
-## Part IV: The TPRM Problem — Why Annual Questionnaires Cannot Measure VEDS
+### The VEDS Floor Contract Clause Is a Negotiation, Not a Demand
 
-### 4.1 What Questionnaires Actually Measure
+The paper proposes contract language requiring vendors to maintain a VEDS score above a floor. This is a good idea. It's also a clause that most vendors will resist, because it introduces a termination right based on a metric they don't control and may not understand.
 
-I want to spend time on this because it is where I see the biggest gap between what organizations think they are doing and what they are actually doing.
+Here's how to actually get it:
 
-Annual vendor questionnaires measure intent, documentation, and past state. They ask whether a vendor has policies in place, whether exceptions have been documented, whether controls exist. They do not measure liveness, operational reality, or current decay state.
+**First**, don't lead with the VEDS floor. Lead with transparency requirements. "Vendor will provide the information necessary for accepting organization to assess vendor's security posture on a quarterly basis, including but not limited to: current attestation status, incident history for the preceding quarter, material changes to subprocessors or infrastructure, and confirmation of ongoing compliance with contractual security obligations." This is easier for vendors to accept because it's about disclosure, not performance.
 
-Here is the translation table:
+**Second**, introduce the VEDS floor at renewal, not at initial contracting. By renewal, you have a year or more of data. You can show the vendor their VEDS score and say "we'd like to include a floor in the renewal to formalize our mutual commitment to maintaining this level of security." Vendors who have been good partners will often accept this because it differentiates them from competitors.
 
-| Questionnaire Question | What It Actually Measures | What VEDS Needs |
-|:---|:---|:---|
-| "Do you have an exception management policy?" | Whether a document exists | VSIR: current operational scope vs. approved scope |
-| "Are all exceptions reviewed on a regular cadence?" | Whether renewals occur | VAL_n: current authorization state, chain length, renewal history |
-| "Are exception owners assigned and current?" | Whether a field is populated | VCC: whether the named person understands the exception they own |
-| "Are compensating controls in place for all exceptions?" | Whether a control was documented | VCL: whether the control is currently detecting anything |
-| "Do you flow down security requirements to subcontractors?" | Whether a policy clause exists | CA: actual subcontractor scope, their exception registers, their VEDS |
-
-The questionnaire is not useless. It establishes a baseline. But it cannot measure decay. And decay is what kills you.
-
-### 4.2 The Point-in-Time Problem
-
-```mermaid
-flowchart LR
-    Q1["Questionnaire Submitted: Jan 2026
-    Controls in place. Exceptions reviewed quarterly.
-    No material findings.
-    VEDS at submission: 0.72"]
-
-    GAP1["Feb 2026:
-    VCL decays to 0.
-    SIEM rule stops matching.
-    VEDS collapses to 0."]
-
-    GAP2["Apr 2026:
-    Vendor scope expands to new shared cluster.
-    VSIR drops to 0.55."]
-
-    GAP3["Jun 2026:
-    Exception owner leaves.
-    VCC drops to 0.50."]
-
-    GAP4["Sep 2026:
-    Attacker identifies the integration point.
-    Dwell time begins."]
-
-    Q2["Next Questionnaire Due: Jan 2027.
-    Current VEDS: 0.0.
-    You will ask your questions.
-    They will answer truthfully based on documentation.
-    The documentation is green.
-    The exception is wide open."]
-
-    Q1 --> GAP1 --> GAP2 --> GAP3 --> GAP4 --> Q2
-
-    style Q1 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style GAP1 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style GAP2 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style GAP3 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style GAP4 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-    style Q2 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-```
-
-The 12-month assessment cycle has a 12-month blind spot. Anything that decays within that window is invisible until you ask again. By then you are measuring a past state that may no longer exist.
+**Third**, be prepared to walk away from vendors who refuse. If a vendor won't commit to maintaining a minimum security posture, that's information. It tells you they either don't believe they can maintain it, or they don't want to be held accountable if they don't. Neither is a good sign.
 
 ---
 
-## Part V: The VEDS Audit Procedure
+### Channel 6 Needs a Trigger That Doesn't Require Heroics
 
-### 5.1 What You Actually Need to Assess
+The paper describes Channel 6 (Vendor Incident Feedback) as a six-step process triggered by vendor incident disclosure or detection. The problem: in most organizations, vendor incidents are handled ad hoc. Someone from the vendor relationship team gets an email from the vendor saying "we had an incident." They forward it to security. Security looks at it and determines whether it affects the organization. By the time anyone thinks to update the risk register, the incident is 3 weeks old and the feedback loop has already failed.
 
-I designed this as a companion to the 8-step exception integrity audit from the ELDM. That procedure tests your own exceptions. This one tests your vendors' exceptions to the extent you can reach them.
+Channel 6 needs an automated trigger. Something as simple as: any email to the vendor-security@yourcompany.com alias creates a ticket in the GRC platform with the Channel 6 workflow attached. The ticket can't be closed without the six steps being documented.
 
-Honestly: you cannot compute exact VEDS without vendor cooperation. But you can build a good proxy from what you can observe and what you can contractually require. And you can score the uncertainty itself as part of your risk posture.
-
-| Step | Test | VEDS Component | Time | Who |
-|:---:|:---|:---:|:---:|:---|
-| **1** | Request the vendor exception register extract for all exceptions that touch your integration boundary, data, or trust chain. If they cannot or will not produce this, score that as VCC decay. | All | 2 days | Third Party Risk Manager |
-| **2** | For each disclosed exception, verify the current scope against your own integration telemetry. Do their stated scope strings match what you see in your API logs? Mismatches are vendor scope phantoms. | VSIR | 4 hours | Detection Engineer |
-| **3** | Check expiry dates on each disclosed exception. For those past expiry, ask for documented renewal records. Email threads do not count. System-of-record entries only. | VAL_n | 2 hours | GRC Auditor |
-| **4** | Verify named exception owners against current organizational data. For each owner who has left: ask for documented successor briefing evidence. Undocumented succession equals VCC decay. | VCC | 3 hours | Third Party Risk Manager |
-| **5** | Request evidence of compensating control liveness. Not documentation of the control. Evidence it fired recently. Logs, alert exports, coverage test results. Anything that shows the control is detecting, not just existing. | VCL | 1 day | Detection Engineer |
-| **6** | Map integration depth: how many of your critical systems depend on the integration covered by each exception? More dependencies equals higher CA. | CA | 3 hours | Security Architect |
-| **7** | Map data sensitivity: what data classifications transit each excepted integration? Higher sensitivity equals higher CA. | CA | 2 hours | Data Classification Team |
-| **8** | Ask for the vendor subcontractor list for components covered by the exceptions. If they cannot provide it, treat Vendor Tier as unknown and apply Tier 3 CA multiplier. | CA | 2 days | Third Party Risk Manager |
-| **9** | Score each exception with VEDS. For any component you cannot verify, treat it as decayed (0) unless you have positive evidence otherwise. | All | 2 hours | GRC Auditor |
-| **10** | Prioritize for action by: VEDS x CA score. Lower VEDS combined with higher CA equals higher urgency. | All | 1 hour | CISO |
-
-**Total per critical vendor:** 3-4 days of coordinated effort  
-**Realistic coverage per quarter:** Full assessment for top 10 critical vendors, proxy assessment for next 20
-
-### 5.2 The Vendor Exception Evidence Request Template
-
-```
-VENDOR EXCEPTION EVIDENCE REQUEST
-Requestor: [Your Organization Name]
-Vendor: [Vendor Name]
-Assessment Date: [Date]
-Scope: All exceptions affecting systems, integrations, or data flows involving [your org name]
-
-For each in-scope exception, please provide:
-
-1. SCOPE VERIFICATION
-   a) Current scope definition (asset list, subnet ranges, service identifiers)
-   b) Integration points with our environment affected by this exception
-   c) Any scope changes since original approval (with dates)
-
-2. AUTHORIZATION STATUS
-   a) Original expiry date and current status
-   b) Renewal history (system-of-record entries only, not email threads)
-   c) Current authorization expiry date
-
-3. OWNERSHIP CHAIN
-   a) Current named exception owner (name, role, contact)
-   b) Current named technical custodian (name, role, contact)
-   c) If different from original, evidence of documented handoff
-
-4. COMPENSATING CONTROL EVIDENCE
-   a) Description of current compensating control
-   b) Evidence of liveness: alert logs from last 30 days, or coverage test results dated
-      within 30 days. Not documentation of the control. Evidence it fired.
-   c) Log source status confirmation
-   d) Escalation rate for alerts generated by the control
-
-5. SUBCONTRACTOR SCOPE
-   a) List of subcontractors with access to systems covered by this exception
-   b) Whether those subcontractors are subject to equivalent controls
-   c) Whether those subcontractors have their own exceptions affecting our data
-
-IMPORTANT: We consider compensating controls unverified unless you provide operational
-evidence as described in item 4. Documentation of a control is not evidence of a live control.
-```
-
-### 5.3 What to Do When Vendors Will Not Provide This
-
-Most vendors will not provide all of this. Some will not provide any of it. That resistance is itself data.
-
-```mermaid
-flowchart TD
-    REQUEST["You send the
-    evidence request."]
-
-    REQUEST --> FULL["Vendor provides
-    full evidence package.
-    Proceed to VEDS scoring."]
-
-    REQUEST --> PARTIAL["Vendor provides
-    partial evidence.
-    Score missing components
-    as decayed (0).
-    VEDS reflects uncertainty."]
-
-    REQUEST --> REFUSE["Vendor declines
-    to provide evidence."]
-
-    REFUSE --> R1["Contractual enforcement.
-    If exception notification is
-    in your contract, this is
-    a breach of that clause.
-    Escalate to legal."]
-
-    REFUSE --> R2["Proxy measurement.
-    Use your integration telemetry
-    to infer scope drift.
-    Treat VCL and VCC as 0.
-    VEDS = 0 until verified."]
-
-    REFUSE --> R3["Risk-based decision.
-    If CA is high and VEDS
-    cannot be computed:
-    treat the exception as
-    unmitigated. Plan accordingly."]
-
-    REFUSE --> R4["Relationship consequence.
-    A vendor who cannot demonstrate
-    control liveness is a vendor whose
-    assurances you cannot rely on.
-    That belongs in the renewal decision."]
-
-    style FULL fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style PARTIAL fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style REFUSE fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style R1 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style R2 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style R3 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style R4 fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC
-```
+This is unglamorous work. It's also the difference between a closed loop and a loop that only closes when someone remembers to close it.
 
 ---
 
-## Part VI: Detection Engineering for Vendor Boundary Decay
+### The Board Dashboard Needs a Narrative, Not Just Metrics
 
-### 6.1 What You Can Actually Detect From Your Side
+The paper proposes three board metrics: VRTM, VACR, and VINC. These are good metrics. But board members don't want metrics. They want to know: "Are we safe? If not, what are we doing about it? How much will it cost?"
 
-You cannot see inside your vendor SIEM. You cannot run queries on their exception register. But you can instrument your side of the trust boundary and derive proxy signals for VEDS decay.
+The VRTM heat map is useful for showing where the risk is concentrated. The VACR shows how much of your vendor population is operating on stale assurance. The VINC shows whether vendors are meeting their notification obligations.
 
-| Control | Targets | What It Detects | Implementation |
-|:---|:---:|:---|:---|
-| **VDE-1: Integration Baseline Drift** | VSIR | New source addresses, ports, or user agents appearing in the integration that were not present at authorization time. A vendor scope phantom shows up in your logs before it shows up in their exception register. | Daily diff of API traffic source patterns against an approved-sources list maintained per vendor integration. |
-| **VDE-2: Data Volume Anomaly** | VSIR + CA | Abnormal data volumes transiting a vendor integration. Scope expansion often means more data flowing through the excepted channel than the original risk acceptance contemplated. | Rolling 30-day baseline with 2-sigma threshold alerts per vendor integration endpoint. |
-| **VDE-3: Authentication Pattern Monitor** | VCC | Changes in how the vendor service accounts authenticate to your systems. Credential rotation with no communication, new service account names, anomalous auth times. Ownership drift often produces authentication pattern changes as new people take over. | Auth log monitoring keyed to vendor service account enumeration. Alert on new accounts and on accounts going dark for more than 30 days. |
-| **VDE-4: Exception Coverage Test** | VCL | Synthetic test transactions that should trigger the compensating control if it is alive. If the vendor control is supposed to alert on anomalous behavior in the excepted zone, send anomalous behavior and check whether they respond. | Monthly orchestrated test transaction through the integration. If no vendor security response within SLA, flag VCL as potentially decayed. |
-| **VDE-5: Subcontractor Network Emergence** | CA | New IP ranges or ASN clusters appearing in integration traffic that map to infrastructure providers not previously observed. This is how Tier 3 subcontractors show up in your telemetry before they show up in your vendor disclosed organization chart. | BGP-level integration traffic analysis and ASN reputation checking per vendor integration. |
+But the narrative that ties them together is: "We have X critical vendors. Y of them have VEDS scores below the acceptable threshold. The primary driver is [attestation staleness / telemetry gaps / obligation recession]. We are addressing this through [specific actions] at a cost of [budget] and expect to improve VEDS scores to [target] by [date]."
 
-```mermaid
-graph TD
-    subgraph VDE1 ["VDE-1: Integration Baseline Drift (Daily)"]
-        V1A["Pull approved-sources list
-        for each vendor integration"] --> V1B["Diff against today
-        observed source patterns"]
-        V1B --> V1C{"New sources found?"}
-        V1C -- Yes --> V1D["Scope phantom candidate.
-        Alert third party risk team.
-        VSIR proxy: declining."]
-        V1C -- No --> V1E["VSIR proxy: stable.
-        No action needed."]
-    end
-
-    subgraph VDE4 ["VDE-4: Exception Coverage Test (Monthly)"]
-        V4A["Send synthetic anomalous
-        transaction through integration.
-        Designed to trigger vendor
-        compensating rule."] --> V4B["Monitor for vendor
-        security contact reaching out.
-        SLA: 48 hours."]
-        V4B --> V4C{"Vendor responded?"}
-        V4C -- Yes --> V4D["VCL proxy: alive.
-        Control appears operational."]
-        V4C -- No --> V4E["VCL proxy: dead or degraded.
-        Escalate. Treat VCL = 0
-        until vendor provides
-        coverage evidence."]
-    end
-
-    style V1D fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style V1E fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style V4D fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style V4E fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-```
+The paper gives you the metrics. The narrative is what makes them actionable.
 
 ---
 
-## Part VII: CISO and Board Metrics for Vendor Exception Decay
+## Part 4: The Honest Limitations
 
-### 7.1 Four Metrics That Tell the Truth
+### VEDS Won't Prevent Breaches
 
-Most third party risk dashboards give executives a vendor risk score. That score is built from questionnaire responses and static assessments. It looks stable because it only moves when you ask and they answer differently than last time.
+This is important to say clearly: VEDS measures the health of your vendor relationships. It does not prevent your vendors from being breached. It does not prevent attackers from exploiting vendor trust relationships. It does not eliminate the risk that a vendor you've assessed as low-risk turns out to have been compromised six months ago in a way that no attestation or telemetry would have caught.
 
-These four metrics measure state and direction in a way that a questionnaire score cannot.
+What VEDS does is ensure that when a vendor breach happens — and it will — you have the information you need to respond quickly. You know what data the vendor had access to. You know what telemetry you have (and what you don't). You know what notification obligations exist. You know who to call.
 
-| Metric | Type | One-Line Board Summary |
-|:---|:---:|:---|
-| **Decayed Vendor Exception Count (DVEC)** | Stock | "We are carrying N vendor exceptions whose VEDS indicates operational decay, meaning the documented risk acceptance no longer matches the actual risk posture." |
-| **Vendor Scope Phantom Count (VSPC)** | Stock | "Our integration boundary telemetry shows N integration source patterns that fall outside the scope of any reviewed and authorized vendor exception." |
-| **Verified Compensation Rate (VCR)** | Stock | "X% of our critical vendor exceptions have compensating controls with independently verified liveness. The remaining Y% rely on vendor self-reporting." |
-| **Vendor Exception Debt Velocity (VEDV)** | Flow | "For every new vendor exception we accept this quarter, we are closing 0.6 by verified remediation or contract renegotiation. Our vendor exception debt is growing 40% annually." |
-
-### 7.2 The VEDS Register Structure
-
-The VEDS register is not a replacement for your existing vendor risk register. It is a layer on top of it that tracks exception-specific decay state. One row per vendor exception. Updated quarterly at minimum, continuously for critical vendors.
-
-```
-VEDS REGISTER ENTRY
-Vendor: [Name]
-Vendor Tier: [1 / 2 / 3]
-Exception ID (Vendor): [Their internal ID if known]
-Exception ID (Your ref): [Your cross-reference ID]
-Exception Summary: [One line: what risk has the vendor accepted?]
-Integration Points Affected: [List of your systems that touch this exception]
-Data Classifications Transiting: [What data of yours is covered by this exception?]
-Last Evidence Package Received: [Date]
-
-VEDS SCORING
-VSIR: [0.0 - 1.0] | Evidence basis: [integration telemetry / vendor provided / questionnaire]
-VAL_n: [0.0 - 1.0] | Evidence basis: [contract record / vendor provided / inferred]
-VCC: [0.0 - 1.0] | Evidence basis: [vendor provided / personnel check]
-VCL: [0.0 - 1.0] | Evidence basis: [coverage test result / vendor provided logs / assumed 0]
-CA: [1.0 - 10.0+] | Calculated from: integration depth, data sensitivity, vendor tier, shared exposure
-
-VEDS = [VSIR x VAL_n x VCC x VCL] | CA context: [CA value and interpretation]
-
-PRIORITY SCORE: (1.0 - VEDS) x CA -- higher means more urgent
-
-ACTION REQUIRED: [None / Vendor engagement / Contract enforcement / Integration isolation]
-Next Review: [Date]
-```
+This is not nothing. But it's not prevention. It's preparedness.
 
 ---
 
-## Part VIII: The Vendor Exception Attack Chain
+### VEDS Doesn't Solve Fourth-Party Risk
 
-### 8.1 How Attackers Use Vendor Exception Decay
+The paper acknowledges this in the Limitations section, but it's worth emphasizing: TO Layer 2 (fourth-party opacity) is genuinely unsolved for most organizations.
 
-Attackers who target supply chains do not need to break through your defenses. They need to find the vendor whose exception decay has created an open door, and use that door to reach you.
+Your vendor uses AWS. AWS uses hardware from manufacturers you've never heard of. Those manufacturers use firmware from companies in countries you've never assessed. Your vendor's SOC 2 report carves out AWS. AWS's SOC 2 report carves out its hardware vendors. The chain of carve-outs goes down until it disappears into the fog of "we trust the cloud."
 
-```mermaid
-flowchart TD
-    ATT["Attacker
-    Target: Your Organization
-    Direct attack surface: hardened.
-    Supply chain: unexplored."]
+VEDS can measure your direct vendor's opacity. It cannot measure the opacity of the vendor's vendors' vendors. At some point, you have to accept that you're trusting the infrastructure of the internet, and that trust is not something you can assess or manage at the organizational level.
 
-    ATT --> RECON1["Passive Recon Phase 1:
-    Map your disclosed vendor relationships.
-    Job postings, LinkedIn, SSL cert SANs,
-    API documentation, public architecture talks.
-    Who do you depend on?"]
+The paper says fourth-party risk requires "industry-level information sharing." This is true but incomplete. It also requires regulatory intervention — mandatory disclosure requirements for critical infrastructure providers, standardized security requirements that propagate down the supply chain, and liability frameworks that make fourth-party risk someone's problem to solve.
 
-    RECON1 --> RECON2["Passive Recon Phase 2:
-    For each identified vendor, look for signals
-    of legacy infrastructure, unpatched components,
-    long-running integrations with unusual auth patterns.
-    Who looks like they have old exceptions?"]
-
-    RECON2 --> RECON3["Active Recon Phase 3:
-    Probe the vendor external surface.
-    Find the integration endpoints they run for you.
-    Look for authentication patterns that suggest
-    service account credentials without MFA.
-    Test for scope drift signals."]
-
-    RECON3 --> ACCESS["Initial Access:
-    The vendor integration boundary is
-    authenticated by a service account
-    covered by an unmonitored exception.
-    No MFA. No anomaly detection.
-    The compensating rule stopped
-    firing 6 months ago.
-    Attacker authenticates.
-    Zero alerts. Zero responses."]
-
-    ACCESS --> PIVOT["Lateral Movement:
-    From the vendor integration point,
-    pivot to your internal systems.
-    The trust relationship that
-    the integration relies on
-    becomes the attack path."]
-
-    PIVOT --> IMPACT["Impact:
-    Data exfiltration, ransomware,
-    or persistent access.
-    All through a door that was
-    documented as controlled.
-    The control stopped working
-    months before they arrived."]
-
-    style ATT fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style RECON1 fill:#1E293B,stroke:#475569,color:#F8FAFC
-    style RECON2 fill:#1E293B,stroke:#475569,color:#F8FAFC
-    style RECON3 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style ACCESS fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style PIVOT fill:#7F1D1D,stroke:#F87171,color:#F8FAFC
-    style IMPACT fill:#7F1D1D,stroke:#F87171,color:#F8FAFC,stroke-width:3px
-```
-
-### 8.2 The Vendor Exception Attack Tree
-
-Individual exceptions with individually acceptable risk scores combining into critical attack chains. The same thing happens across vendor tiers.
-
-```mermaid
-flowchart LR
-    subgraph EAT["Vendor Exception Attack Chain"]
-        VEX1["Vendor A Exception:
-        MFA bypass for API service account.
-        Vendor risk score: Medium.
-        VEDS: 0.12 (decayed).
-        CA: 4.5."]
-
-        VEX2["Vendor A Subcontractor Exception:
-        Legacy auth protocol on shared cluster.
-        Vendor A risk score for this: Low.
-        Your awareness: zero.
-        VEDS: unknown (assumed 0).
-        CA: 6.0."]
-
-        VEX3["Vendor B Exception:
-        Logging gaps in environment processing
-        your customer data.
-        Vendor B risk score: Medium.
-        VEDS: 0.0 (VCL dead for 4 months).
-        Your awareness: questionnaire said yes."]
-
-        CHAIN1["Attacker uses legacy auth
-        on shared cluster to access
-        Vendor A environment.
-        MFA bypass means attacker
-        authenticates as their
-        API service account."]
-
-        CHAIN2["Attacker now has authenticated
-        access to your integration through Vendor A.
-        Vendor B logging gap means the lateral
-        movement through the integration is not logged."]
-
-        IMPACT2["Critical Incident.
-        Three individually Medium exceptions.
-        One Low unknown exception.
-        Combined: catastrophic.
-        Four different organizations.
-        One attack chain."]
-
-        VEX1 --> CHAIN1
-        VEX2 --> CHAIN1
-        CHAIN1 --> CHAIN2
-        VEX3 --> CHAIN2
-        CHAIN2 --> IMPACT2
-    end
-
-    style VEX1 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style VEX2 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style VEX3 fill:#4C0519,stroke:#F43F5E,color:#F8FAFC
-    style CHAIN1 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style CHAIN2 fill:#78350F,stroke:#F59E0B,color:#F8FAFC
-    style IMPACT2 fill:#7F1D1D,stroke:#F87171,color:#F8FAFC,stroke-width:3px
-```
+None of that exists yet. VEDS works with what you can measure. It doesn't pretend to measure what you can't.
 
 ---
 
-## Part IX: Governance Interventions That Actually Work
+### The VEDS Score Is Only as Good as Your Data
 
-### 9.1 Five Changes That Target the Root Cause
+This is in the paper's Limitations section, but it deserves to be said louder: a VEDS score computed from bad data is worse than no VEDS score at all, because it creates false confidence.
 
-```mermaid
-flowchart TD
-    VI1["Intervention 1: Contract Exception Transparency Clause
-    Every vendor contract involving sensitive data or critical integrations must include:
-    a) Mandatory disclosure of all exceptions affecting your integration
-    b) 30-day notification of any exception renewal, scope change, or owner change
-    c) Annual compensating control evidence package (operational evidence, not documentation)
-    d) Right to audit exception register entries that affect your data or systems
-    Without this clause, you are operating blind by contract."]
+If your vendor inventory is incomplete, your VEDS population analysis is wrong. If your contract metadata is stale, your CD scores are wrong. If your SIEM doesn't actually log what you think it logs, your TD scores are wrong. If your obligation tracker is a spreadsheet that hasn't been updated since the person who created it left, your OR scores are wrong.
 
-    VI2["Intervention 2: Integration Telemetry as Proxy for VSIR
-    Instrument every vendor integration with:
-    a) Approved-sources list maintained per integration
-    b) Daily drift detection against that list
-    c) Data volume baselining with anomaly thresholds
-    Every scope phantom eventually shows up in your logs.
-    This makes the signal visible before the incident."]
-
-    VI3["Intervention 3: VCL Default is Zero Until Proven
-    Formal policy: any vendor compensating control is treated as unverified
-    unless you have received operational evidence within the last 90 days.
-    A compensating control claimed in a questionnaire but not evidenced
-    through liveness data does not reduce your risk posture.
-    This one change makes questionnaire responses honest by policy."]
-
-    VI4["Intervention 4: CA-Weighted Exception Priority
-    All vendor exceptions are scored by VEDS x CA.
-    High CA vendors get quarterly VEDS assessments.
-    Low CA vendors get annual.
-    The priority list is generated automatically and reviewed by the CISO monthly.
-    This converts the vendor risk program from relationship management
-    to evidence-based exception decay management."]
-
-    VI5["Intervention 5: Subcontractor Scope is Your Scope
-    Policy: any vendor exception covering infrastructure shared with subcontractors
-    extends your risk acceptance to those subcontractors.
-    You did not agree to accept their risk. But if they can reach your data
-    through your vendor excepted integration, their exceptions affect your posture.
-    This creates the right incentive: vendors must manage their subcontractor
-    exceptions if they want to maintain the trust boundary with you."]
-
-    style VI1 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style VI2 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style VI3 fill:#312E81,stroke:#8B5CF6,color:#F8FAFC
-    style VI4 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-    style VI5 fill:#064E3B,stroke:#10B981,color:#F8FAFC
-```
-
-### 9.2 The SOAR Integration Schema for Vendor Exception Decay
-
-Manual VEDS tracking does not scale past your top ten vendors. At twenty vendors, you need automation. At fifty, you need SOAR integration.
-
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "VEDSScorePayload",
-  "type": "object",
-  "properties": {
-    "vendor_id": { "type": "string" },
-    "exception_id_internal": { "type": "string" },
-    "assessment_date": { "type": "string", "format": "date-time" },
-    "veds_components": {
-      "type": "object",
-      "properties": {
-        "vsir": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "evidence_basis": { "type": "string",
-            "enum": ["integration_telemetry", "vendor_provided", "questionnaire", "assumed_zero"] }
-        },
-        "val_n": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "evidence_basis": { "type": "string",
-            "enum": ["contract_record", "vendor_provided", "inferred", "assumed_zero"] }
-        },
-        "vcc": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "evidence_basis": { "type": "string",
-            "enum": ["vendor_provided", "personnel_check", "assumed_zero"] }
-        },
-        "vcl": {
-          "type": "number", "minimum": 0, "maximum": 1,
-          "evidence_basis": { "type": "string",
-            "enum": ["coverage_test_result", "vendor_provided_logs", "assumed_zero"] }
-        },
-        "ca": {
-          "type": "number", "minimum": 1,
-          "breakdown": {
-            "integration_depth": { "type": "integer", "minimum": 1, "maximum": 5 },
-            "data_sensitivity": { "type": "integer", "minimum": 1, "maximum": 5 },
-            "vendor_tier": { "type": "integer", "minimum": 1, "maximum": 3 },
-            "shared_exposure": { "type": "integer", "minimum": 1, "maximum": 5 }
-          }
-        }
-      },
-      "required": ["vsir", "val_n", "vcc", "vcl", "ca"]
-    },
-    "veds_score": { "type": "number", "minimum": 0, "maximum": 1 },
-    "priority_score": { "type": "number" },
-    "action_required": {
-      "type": "string",
-      "enum": ["none", "vendor_engagement", "contract_enforcement",
-               "integration_isolation", "executive_escalation"]
-    },
-    "next_review_date": { "type": "string", "format": "date" }
-  },
-  "required": ["vendor_id", "exception_id_internal", "assessment_date",
-               "veds_components", "veds_score", "priority_score", "action_required"]
-}
-```
+The paper's implementation roadmap starts with data consolidation because that's the actual work. The formulas are elegant. The data is messy. The gap between them is where VEDS programs fail.
 
 ---
 
-## Part X: Regulatory Context
+## Part 5: What I'd Actually Do
 
-### 10.1 Where VEDS Fits Your Obligations
+If I were implementing VEDS in a real organization, here's the sequence I'd follow:
 
-```mermaid
-flowchart LR
-    subgraph REG["Regulatory Requirement Sources"]
-        DORA["DORA Article 28-30
-        ICT Third Party Risk Management
-        Requires ongoing monitoring
-        of third party arrangements,
-        not just point-in-time assessment."]
+**Month 1:** Vendor inventory and tiering. Pull every vendor with system access or data processing. Classify into Tier 1 (critical), Tier 2 (high), Tier 3 (standard), Tier 4 (low). This will take longer than you think, because vendor lists are usually spread across procurement, legal, IT, and business units, and no two lists match.
 
-        NIS2["NIS2 Article 21(2)(d)
-        Supply chain security including
-        security-related aspects concerning
-        relationships between each entity
-        and its suppliers or service providers."]
+**Month 2:** Contract and attestation data collection for Tier 1 and Tier 2. Pull current contracts and latest attestations. If you don't have them, request them. The act of requesting them will surface the first findings — vendors who can't produce a current SOC 2 report, contracts that are expired, DPAs that were never signed.
 
-        ISO27001["ISO 27001:2022
-        Annex A 5.19-5.22
-        Information security in supplier
-        relationships: ongoing monitoring
-        of supplier agreements, review
-        of supplier service delivery."]
+**Month 3:** Compute CD and AD for Tier 1 and Tier 2 vendors. These are document-based and don't require SIEM access. The results will give you your first ranked list of vendors by contract and attestation health.
 
-        SEC["SEC Cybersecurity Disclosure Rules
-        Material third party incidents
-        require disclosure. Vendor exception
-        decay that enables an incident
-        may be material."]
-    end
+**Month 4:** Telemetry assessment for Tier 1 vendors. Work with your SOC to determine what Layer 1 and Layer 2 coverage actually exists. Don't accept "we log everything" — look at the actual rules, the actual baselines, the actual alert thresholds. The gap between "we have the data" and "we would detect an incident" is usually large.
 
-    VEDS_MAP["VEDS Maps Here:
-    VSIR tracks scope integrity (ongoing monitoring)
-    VAL_n tracks authorization currency (agreement currency)
-    VCC tracks relationship continuity (supplier service delivery)
-    VCL tracks compensating control liveness (security effectiveness)
-    CA tracks materiality (which vendors matter most)"]
+**Month 5:** Obligation inventory and enforcement assessment for Tier 1 vendors. Talk to the people who manage each vendor relationship. Ask them: when did you last request a security report? When did you last exercise audit rights? When did the vendor last notify you of a subprocessor change? The answers will tell you the OR score without any computation needed.
 
-    DORA --> VEDS_MAP
-    NIS2 --> VEDS_MAP
-    ISO27001 --> VEDS_MAP
-    SEC --> VEDS_MAP
+**Month 6:** Compute VEDS for Tier 1 and Tier 2. Estimate TO based on the opacity framework. Integrate into risk register. Produce the first board dashboard.
 
-    style DORA fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style NIS2 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style ISO27001 fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style SEC fill:#1E3A5F,stroke:#3B82F6,color:#F8FAFC
-    style VEDS_MAP fill:#064E3B,stroke:#10B981,color:#F8FAFC
-```
+**Month 7+:** Operationalize. Build Channel 6. Implement the contract clause at renewal. Calibrate the telemetry queries. Repeat quarterly.
 
-| Framework | Clause | What It Requires | How VEDS Addresses It |
-|:---|:---:|:---|:---|
-| **DORA** | Art. 28(4)(e) | Monitor and manage ICT third party concentration risk on an ongoing basis. | VEDS provides a continuous decay score per vendor, enabling ongoing monitoring rather than annual snapshots. |
-| **DORA** | Art. 30(2)(b) | Exit strategies to minimize disruption from ICT third party failure. | High CA combined with low VEDS equals candidates for integration isolation planning. |
-| **NIS2** | Art. 21(2)(d) | Supply chain security measures including relationships with suppliers. | VEDS audit procedure gives auditable evidence of supply chain security monitoring. |
-| **ISO 27001:2022** | A.5.19 | Review and monitor supplier services against agreements. | VCL evidence package directly satisfies this review requirement with operational data. |
-| **ISO 27001:2022** | A.5.22 | Monitor, review and manage changes to supplier services. | VDE-1 and VDE-3 provide change monitoring signals. |
-| **NIST CSF 2.0** | GV.SC-07 | Risks posed by suppliers and their supply chains. | VEDS x CA scoring provides the risk quantification this control function requires. |
+This is a 6-month program to get to initial VEDS computation for your most important vendors. It's not fast. It's not cheap. It's the work that has to happen if you want to actually manage vendor risk rather than just document that you're aware of it.
 
 ---
 
-## Part XI: Limitations
+## The Thing the Paper Can't Say
 
-This section exists because every honest piece of research includes it.
+The paper ends with a quote about making opacity legible. It's a good quote. It captures the intellectual contribution of the work.
 
-**The asymmetric information problem is the model core limitation.** VEDS requires data that you often do not have direct access to. VSIR requires vendor infrastructure inventory. VAL_n requires vendor exception register state. VCC requires vendor organizational charts. VCL requires vendor SIEM telemetry. For most vendor relationships, most of these inputs are unavailable and must be approximated or defaulted to zero. The model is most useful when used to formalize the uncertainty you are already operating under, not to produce a precise number.
+But here's what a research paper can't say, because research papers aren't supposed to be emotional:
 
-**CA is a heuristic, not a derivation.** The four CA factors and their weighting are defensible on logical grounds but have not been empirically validated against incident data. An organization implementing this model should treat CA as a relative ranking tool rather than an absolute risk quantification.
+**You are going to get breached through a vendor.** Not might. Will. The question isn't whether it happens. The question is whether you see it happening, whether you know what to do when you see it, and whether you've built the governance structures that turn a vendor incident into a managed response rather than a chaotic scramble.
 
-**The product form has the same limitation as EDS.** The multiplicative structure reflects attacker logic but is a modeling choice. Alternative aggregations should be tested empirically in Phase 2 with real register data.
+VEDS is a tool for that. It's a good tool. It's better than what most organizations have, which is a spreadsheet of vendor names and a checkbox for "SOC 2 received: Y/N." It gives you a structured way to think about vendor risk, a quantifiable way to measure it, and a vocabulary to discuss it with your board.
 
-**Cross-vendor attack chain analysis is not modeled here.** The Vendor Exception Attack Tree in Part VIII is qualitative. I did not formalize a cross-vendor chain risk score in this paper. That is the next extension.
+But the tool only works if you use it. The formula only matters if you compute it. The dashboard only helps if you look at it. The contract clause only protects you if you negotiate it.
 
-**The questionnaire is not useless.** I was harder on questionnaires in this paper than I probably needed to be. They provide structured baseline data and create legal accountability. What they cannot do is measure current decay state. The questionnaire and VEDS are complementary, not competitive.
+The decay is happening right now. In your vendors' environments, exceptions are expiring. Certifications are aging. Telemetry is going dark. Obligations are receding. Custodians are leaving. The attack surface is growing.
 
-### Pre-Registered Predictions
+You can't stop it. But you can measure it. And measurement is the first step toward management.
 
-| Prediction | Hypothesis | What Would Falsify It |
-|:---|:---|:---|
-| VP1 | Organizations with formal VEDS tracking programs will report materially lower third party incident rates than organizations using questionnaire-only programs, after controlling for vendor count. | No significant difference in incident rates after 3 years of tracking. |
-| VP2 | Integration telemetry-based VSIR proxy measurement will detect vendor scope drift events before they are disclosed in questionnaire responses, with a lead time of at least 60 days. | Scope drift events are detected at questionnaire time at equal or higher rates than via telemetry. |
-| VP3 | VCL will be the strongest single predictor of whether a vendor exception eventually contributes to a security incident. | Any other single VEDS component is an equally strong or stronger predictor. |
-| VP4 | CA score will moderate the relationship between VEDS and incident severity: equivalent VEDS decay at high-CA vendors produces materially worse outcomes than at low-CA vendors. | CA does not moderate severity above what VEDS alone predicts. |
+That's what VEDS gives you. The rest is up to you.
 
 ---
 
-## Part XII: What I Would Do Differently
+## Appendix: Quick Reference — What to Do Tomorrow
 
-**Start with integration telemetry, not questionnaires.** I designed the VEDS scoring model before fully thinking through the data collection problem. The questionnaire is the easiest data to get but the least useful for measuring decay. If I were starting this research again, I would build the integration telemetry instrumentation first and design the model around what is actually observable.
+If you're reading this and thinking "this is all great, but what do I actually do tomorrow," here's the answer:
 
-**CA needs empirical calibration.** The cascade amplification component is the most novel part of this model and the least empirically grounded. I have logical reasons to believe that integration depth and shared exposure amplify vendor exception risk, but I have not validated the specific weights or the interaction structure.
+1. **Pull your vendor list.** Every vendor with system access or data processing. If you don't have a single list, that's your first finding.
 
-**The subcontractor scope problem is bigger than I initially thought.** When I started pulling at the "what about your vendor's vendor" thread, I realized that most organizations have essentially no visibility into Tier 2 and Tier 3 relationships. A full paper on Tier 2+ risk modeling would be worth writing separately.
+2. **Pick your top 5 vendors by impact.** Not spend. Impact. The ones whose failure would stop your business or trigger regulatory notification.
 
-**Liveness testing should be contractual, not optional.** The VDE-4 coverage test control is probably the highest value thing in Part VI and it requires vendor cooperation to work properly. Without a contract clause requiring vendors to permit and respond to synthetic test transactions, you are asking for a favor. The clause needs to be in the contract at procurement, not retrofitted later.
+3. **For each of those 5 vendors, answer these questions:**
+   - When was the contract last reviewed for security terms? (CD)
+   - When was the most recent SOC 2, ISO cert, or pentest? (AD)
+   - Do you have alert rules on vendor access to your systems? (TD)
+   - When did you last enforce a security obligation in the contract? (OR)
+   - What can't you see about this vendor's security posture? (TO)
 
----
+4. **Score each answer 0-1.** Multiply the five scores together. That's your rough VEDS for that vendor.
 
-## Conclusion
+5. **If any score is below 0.5, you have a finding.** Document it. Add it to the risk register. Assign an owner. Set a deadline.
 
-I started this paper trying to answer one question: if exceptions inside your organization decay on a predictable schedule, what happens to the exceptions inside your vendors' organizations?
+That's it. That's the start. You don't need a GRC platform or a six-month program to do this. You need a spreadsheet and an hour of honesty about what you actually know versus what you've been assuming.
 
-The answer is: the same thing, but you cannot see it happening.
-
-Every exception your vendors have signed for risks in their environment that touch your data, your integrations, or your trust boundaries is subject to the same four drifts. Scope expands past what was approved. Authorization outlives its window. Ownership dissolves as people move on. Detection rots until the compensating control is watching nothing.
-
-The difference is that you are not watching either. You are relying on an annual questionnaire to tell you about a process that decays continuously, quietly, and without any signal that crosses your organizational boundary until the attacker uses the resulting gap to reach you.
-
-That is the third party exception decay problem. It is not exotic. It is structural. It is happening right now, in the vendor exception registers of your most critical dependencies, for exceptions you have never seen.
-
-The VEDS Model gives you a way to reason about it systematically. Five components. A product that collapses to zero when any of them fail. A cascade amplification term that reflects how far the damage travels. A detection control set that instruments the boundary you can see from your side. An audit procedure that asks vendors for the evidence that actually matters. And a set of contract clauses and governance interventions that shift the default outcome from invisible decay to managed uncertainty.
-
-The questionnaire told you they had controls in place. The VEDS told you nobody had tested whether those controls were still running.
-
-The difference between those two answers is where breaches live.
+The paper gives you the framework. The implementation is up to you.
 
 ---
 
-## Immediate Action Checklist
+*End of Part 2.*
 
-- [ ] Identify your top 10 vendors by CA score using integration depth, data sensitivity, and shared exposure
-- [ ] Send the Vendor Exception Evidence Request template to each of those 10 vendors this quarter
-- [ ] Instrument VDE-1 integration baseline drift monitoring for every active vendor API integration
-- [ ] Default VCL to zero for any vendor exception whose compensating control has not been evidenced in the last 90 days
-- [ ] Add the Exception Transparency Clause to your next three vendor contract renewals
-- [ ] Build a VEDS register with at minimum VSIR, VAL_n, VCC, VCL, and CA scores for your critical vendors
-- [ ] Run VDE-4 coverage tests against your two highest-CA vendor integrations this month
-- [ ] Present DVEC, VSPC, VCR, and VEDV to your board or risk committee at next reporting cycle
-- [ ] Define what vendor exception decay state triggers integration isolation versus vendor engagement
-- [ ] Add vendor exception decay review as a standing item in every vendor QBR and annual review
+*The research paper told you what VEDS is. This told you what it means, what it doesn't solve, and what to do about it. The rest is execution.*
 
----
-
-## Vendor Dwell Decomposition Template
-
-Any incident that touches a vendor integration boundary should include this in the post-mortem:
-
-```
-VENDOR EXCEPTION DWELL DECOMPOSITION
-Vendor Name:          [Name]
-Vendor Tier:          [1 / 2 / 3]
-Exception Reference:  [Their ID / Your TPRM cross-reference]
-Integration Affected: [Your system that the vendor integration touches]
-
-Was this exception on your radar before the incident?
-  [ ] Yes - VEDS tracked
-  [ ] Partially - vendor assessed but exception not specifically tracked
-  [ ] No - exception unknown to your team before incident
-
-Pre-Incident VEDS State (reconstructed):
-  VSIR: [value] | When did scope drift begin?
-  VAL_n: [value] | Was authorization current at time of incident?
-  VCC: [value] | Were owners current on both sides?
-  VCL: [value] | Was compensating control live at time of incident?
-  CA: [value] | How far did the blast radius reach?
-
-Dwell Time Attribution:
-  Attacker Stealth: [portion attributable to evasion technique]
-  Vendor Sensor Decay: [portion attributable to VCL collapse]
-  Boundary Visibility Gap: [portion attributable to lack of integration telemetry]
-  Questionnaire Lag: [portion attributable to gap between last assessment and decay state]
-
-Conclusion: "Vendor exception [ID] exhibited [which drifts] beginning [estimated date].
-The compensating control evidence last provided to us was dated [date], [X] months before
-the estimated VCL collapse. Our integration telemetry did / did not show signals of
-vendor scope drift that were / were not acted on. This was structurally predictable
-from [date] and was / was not visible with instrumentation we did / did not have."
-```
-
----
-
-## Related Research in This Series
-
-| Paper | Date | Relationship |
-|:---|:---:|:---|
-| [Risk Acceptance Backdoors and Compliance Debt](./ON%2010-09-2026%20-%20RISK%20ACCEPTANCE%20BACKDOORS,%20EXCEPTION%20ATTACK%20TREES,%20AND%20THE%20COMPLIANCE%20DEBT%20METRIC.md) | 10-09-2026 | Origin. Established that signed exceptions are backdoors. VEDS shows that vendor exceptions are backdoors you cannot see. |
-| [The Exception Lifecycle Decay Model (ELDM)](./On%2014-09-2026%20-%20THE%20EXCEPTION%20LIFECYCLE%20DECAY%20MODEL%20How%20Accepted%20Risks%20Rot:%20A%20Four%20Drift%20Theory%20of%20GRC%20Exception%20Decay%20and%20Its%20Forensic,%20Detection,%20and%20Audit%20Consequences.md) | 14-09-2026 | Direct parent model. VEDS is EDS applied to the supply chain boundary with a fifth cascade component. |
-| [The IR-GRC Closed Loop](./On%2015-09-2026%20%20The%20IR-GRC%20Closed%20Loop:%20How%20Incident%20Intelligence%20Flows%20Back%20Into%20the%20Exception%20Register%20Before%20the%20Next%20Attacker%20Arrives.md) | 15-09-2026 | The feedback mechanism. Vendor-originated incidents should feed VEDS register updates through the same closed-loop channels. |
-| [The SOC-GRC Entropy Model](./On%2007-09-2026%20%20The%20SOC-GRC%20Entropy-Model:%20A%20Unified%20Framework%20for%20Security%20Program%20Decay%20and%20the%20Architecture%20of%20Anti-Fragile%20Detection.md) | 07-09-2026 | Thermodynamic framing. Vendor exception decay is entropy accumulation at the supply chain boundary. |
-| Vendor Exception Attack Chain Modeling *(next paper)* | Upcoming | Formalizing the cross-vendor exception chain risk score. The graph model for multi-tier exception attack paths. |
-
----
-
-## References
-
-[1] ENISA. (2021). Supply Chain Attacks Report. European Union Agency for Cybersecurity.
-
-[2] Ponemon Institute. (2025). Third Party Risk Management Study. Ponemon Institute LLC.
-
-[3] NIST SP 800-161 Rev. 1 (2022). Cybersecurity Supply Chain Risk Management Practices for Systems and Organizations.
-
-[4] ISO/IEC 27036:2023. Information security for supplier relationships.
-
-[5] DORA - Regulation (EU) 2022/2554. Digital Operational Resilience Act. Article 28-30: ICT Third Party Risk.
-
-[6] NIS2 Directive (EU) 2022/2555. Article 21(2)(d): Supply chain security.
-
-[7] Atlantic Council Cyber Statecraft Initiative. (2022). Broken Trust: Lessons from Sunburst. Atlantic Council.
-
-[8] MITRE ATT&CK Framework (2026). Supply Chain Compromise: T1195. https://attack.mitre.org/techniques/T1195/
-
-[9] Shannon, C.E. (1948). A Mathematical Theory of Communication. Bell System Technical Journal, 27(3), 379-423.
-
----
-
-*"Your vendors' exceptions are your attack surface. The difference is you did not sign them and you cannot see them decay."*
-
-*-- hiro001-eth | 06-10-2026 | v1.0*
