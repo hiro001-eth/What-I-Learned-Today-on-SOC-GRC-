@@ -8,8 +8,8 @@ Author  : hiro001-eth (Manjil Katuwal)
 Series  : What-I-Learned-Today-on-SOC-GRC
 Version : 1.0 (Research Paper)
 Paper   : 14 of the series
-Prereqs : Papers 8 (Backdoors), 9 (ELDM), 10 (IR-GRC Loop), 12 (UPE), 13 (SAVS)
 Date    : 2026-10-06
+
 ================================================================================
 
 --------------------------------------------------------------------------------
