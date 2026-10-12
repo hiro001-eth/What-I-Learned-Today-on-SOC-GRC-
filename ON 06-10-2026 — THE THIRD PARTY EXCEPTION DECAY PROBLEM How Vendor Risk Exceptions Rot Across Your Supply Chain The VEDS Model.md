@@ -2,7 +2,7 @@
 
 
 ON 06-10-2026 — THE THIRD-PARTY EXCEPTION DECAY PROBLEM
-How Vendor Risk Exceptions Rot Across Your Supply Chain — The VEDS Model
+How Vendor Risk Exceptions Rot Across Your Supply Chain The VEDS Model
 
 Author  : hiro001-eth (Manjil Katuwal)
 Series  : What-I-Learned-Today-on-SOC-GRC
