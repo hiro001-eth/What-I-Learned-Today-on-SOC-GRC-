@@ -1,3 +1,4 @@
+
 # The Invisible Tenant
 
 ## How Attackers Engineer Long Dwell Time After Initial Access
@@ -8,7 +9,7 @@
 
 **Author:** hiro001-eth (Manjil Katuwal)
 
-**Series:** What I Learned Today on SOC+GRC  Paper 16
+**Series:** What I Learned Today on SOC+GRC — Paper 16
 
 **Version:** 1.2 (Revised: prose rewritten for professional publication; diagrams added)
 
@@ -625,4 +626,7 @@ The practitioner who reads those reports, recognizes the techniques in their own
 
 *Revision 1.2 (14 October 2026): prose rewritten in professional register; Mermaid diagrams added (Kerberos flow, git-graph dwell timeline, three-phase coverage, ITSM workflow); tables consolidated; series-internal terms inlined at first use; all technical corrections from the 1.1 peer review retained.*
 
--manjil
+
+> *"The 47-day dwell time was not a mystery. It was the predictable result of watching at the entry and the exit while the attacker lived in the middle. Seven rules close the middle. Eight hours of engineering. The attacker used techniques documented since 2019. The checklist did not include them. The gap between documented technique and deployed detection is measured in engineering hours — almost never in technical impossibility."*
+>
+> **Manjil Katuwal (hiro001-eth), 2026**
