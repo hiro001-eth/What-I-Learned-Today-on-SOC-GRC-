@@ -1,7 +1,7 @@
 # SOC + GRC Operational Research: Attack Chain Architecture & Exception Decay
 
 [![Domain: SOC + GRC Integration](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20Integration-1E293B?style=for-the-badge&logo=shield)](#)
-[![Papers: 16 Published](https://img.shields.io/badge/Papers-16%20Published-7C3AED?style=for-the-badge)](#)
+[![Papers: 17 Published](https://img.shields.io/badge/Papers-16%20Published-7C3AED?style=for-the-badge)](#)
 [![Author: hiro001-eth](https://img.shields.io/badge/Author-hiro001--eth-10B981?style=for-the-badge)](#)
 
 ---
@@ -254,7 +254,8 @@ Different roles require different entry points into this research. Below is a gu
 
 ### 16. [14-10-2026: The Invisible Tenant — How Attackers Engineer Long Dwell Time After Initial Access](./On%2014-10-2026%20THE%20INVISIBLE%20TENANT%20How%20Attackers%20Engineer%20Long%20Dwell%20Time%20After%20Initial%20Access%20%20The%20Middle%20of%20the%20Breach%20That%20Every%20Detection%20Program%20Is%20Built%20to%20Miss.md)
 * **Focus:** Proves that dwell time (global median 14 days; espionage median 122 days) is not an adversary sophistication advantage but a **governance failure** produced by detection programs built exclusively for Phase 1 (entry) and Phase 3 (impact), with zero coverage for Phase 2 (the dwell). Establishes four principles of invisible tenancy (Blend, Operate-in-seams, Calibrate-to-threshold, Plan-for-partial-discovery), documents seven forensically-grounded long-dwell techniques (scheduled tasks, Golden Tickets, cloud-sync C2, WMI subscriptions, backdoor service accounts, ADCS certificate backdoors, Shadow Credentials), presents seven production SPL/KQL detection rules with explicit ATT&CK mapping and validation protocol, and delivers a 10-layer Phase 2 safety architecture with ROI evidence ($1.33M breach lifecycle differential vs. ≈$2K detection engineering investment ≈ 665×–1,330× ROI).
-| **17.** [24-10-2026: The Recovery Paradox – When Documented Backup Controls Fail During a Real Cyber Incident](./On%2024-10-2026%20THE%20RECOVERY%20PARADOX%20When%20Documented%20Backup%20Controls%20Fail%20During%20a%20Real%20Cyber%20Incident%20A%20Recovery%20Assurance%20Playbook.md) | 1.0 | New recovery‑paradox playbook & assurance guidance |
+  
+### **17.** [24-10-2026: The Recovery Paradox – When Documented Backup Controls Fail During a Real Cyber Incident](./On%2024-10-2026%20THE%20RECOVERY%20PARADOX%20When%20Documented%20Backup%20Controls%20Fail%20During%20a%20Real%20Cyber%20Incident%20A%20Recovery%20Assurance%20Playbook.md) | 1.0 | New recovery‑paradox playbook & assurance guidance |
 
 * **Key Deliverables:** Seven Phase 2 detection rules (SPL + KQL); data-source dependency matrix; 13-category IR persistence verification checklist; ITSM krbtgt double-reset workflow with mandatory CISO sign-off gate; three-phase detection investment model; four invisibility principles; and a 47-day composite incident reconstruction demonstrating every forensic artifact was present but zero alerts fired.
 
