@@ -2,7 +2,7 @@
 
 [![Domain: SOC + GRC Integration](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20Integration-1E293B?style=for-the-badge&logo=shield)](#)
 [![Papers: 17 Published](https://img.shields.io/badge/Papers-17%20Published-7C3AED?style=for-the-badge)](#)
-[![Author: Manjil Katuwal](https://img.shields.io/badge/Author-hiro001--eth-10B981?style=for-the-badge)](#)
+[![Author: Manjil Katuwal](https://img.shields.io/badge/Author-Manjil Katuwal-10B981?style=for-the-badge)](#)
 
 ---
 
