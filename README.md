@@ -1,7 +1,7 @@
 # SOC + GRC Operational Research: Attack Chain Architecture & Exception Decay
 
 [![Domain: SOC + GRC Integration](https://img.shields.io/badge/Domain-SOC%20%2B%20GRC%20Integration-1E293B?style=for-the-badge&logo=shield)](#)
-[![Papers: 17 Published](https://img.shields.io/badge/Papers-17%20Published-7C3AED?style=for-the-badge)](#)
+[![Papers: 18 Published](https://img.shields.io/badge/Papers-18%20Published-7C3AED?style=for-the-badge)](#)
 [![Author: hiro001-eth](https://img.shields.io/badge/Author-hiro001--eth-10B981?style=for-the-badge)](#)
 
 ---
@@ -10,11 +10,11 @@
 
 Security Operations (SOC) and Governance, Risk, and Compliance (GRC) have spent decades operating in isolated silos. SOC analysts focus on alerts, logs, and live threats. GRC specialists focus on policies, risk registers, and compliance audits.
 
-Through seventeen research papers, I set out to prove why this operational disconnect is dangerous. I started with basic email header forensics, climbed through cloud identity abuse and live endpoint hunting, built thermodynamic entropy models for security controls, and uncovered the mechanics of how signed risk exceptions quietly rot into attacker-ready backdoors.
+Through eighteen research papers, I set out to prove why this operational disconnect is dangerous. I started with basic email header forensics, climbed through cloud identity abuse and live endpoint hunting, built thermodynamic entropy models for security controls, and uncovered the mechanics of how signed risk exceptions quietly rot into attacker-ready backdoors.
 
-From there, I designed the IR-GRC Closed Loop framework to automate telemetry back-feeding, expanded governance into multi-jurisdictional Privacy Lattice systems, mapped shadow PII data pipelines, built the AI Security Failure Model to address non-deterministic agentic decay, solved the Third-Party Vendor Exception Decay Problem (VEDS), mapped how protocol trust inversion drives the Authentication Coercion Chain Attack (ACCA), exposed the least-documented phase of any breach — the dwell period — proving it is a governance failure, not an adversary sophistication advantage, and finally proved that a backup that has never been restored under the assumption that the adversary already held the keys to it is an untested hypothesis.
+From there, I designed the IR-GRC Closed Loop framework to automate telemetry back-feeding, expanded governance into multi-jurisdictional Privacy Lattice systems, mapped shadow PII data pipelines, built the AI Security Failure Model to address non-deterministic agentic decay, solved the Third-Party Vendor Exception Decay Problem (VEDS), mapped how protocol trust inversion drives the Authentication Coercion Chain Attack (ACCA), exposed the least-documented phase of any breach — the dwell period — proving it is a governance failure not an adversary sophistication advantage, proved that a backup that has never been restored is an untested hypothesis, and finally quantified the Exploit Window Paradox: why patching alone does not confirm security, and how organisations continue to be compromised inside the temporal gap between disclosure and full deployment.
 
-Across seventeen papers, this repository provides unified mathematical decay models ($EDS$, $LIS$, $ODS$, $PEDS$, $SAVS$, $AEDM$, $ALL$, $VEDS$, $RAM$), production detection queries (KQL, SPL, SQL, VQL), automated SOAR containment playbooks, and audit-proof implementation frameworks.
+Across eighteen papers, this repository provides unified mathematical decay models ($EDS$, $LIS$, $ODS$, $PEDS$, $SAVS$, $AEDM$, $ALL$, $VEDS$, $RAM$), production detection queries (KQL, SPL, SQL, VQL), automated SOAR containment playbooks, and audit-proof implementation frameworks.
 
 ---
 
@@ -59,6 +59,7 @@ graph TD
     OCT06 --> OCT09["Paper 15: Oct 09, 2026<br/>Authentication Coercion Chains (ACCA Model)"]
     OCT09 --> OCT14["Paper 16: Oct 14, 2026<br/>The Invisible Tenant: Long-Dwell Persistence"]
     OCT14 --> OCT24["Paper 17: Oct 24, 2026<br/>The Recovery Paradox: Backup Controls & Recovery Assurance"]
+    OCT24 --> NOV01["Paper 18: Nov 01, 2026<br/>The Exploit Window Paradox: Why Patching Does Not Prove Security"]
 
     classDef foundation fill:#0F172A,stroke:#3B82F6,color:#F8FAFC,stroke-width:2px;
     classDef telemetry fill:#1E1B4B,stroke:#6366F1,color:#F8FAFC,stroke-width:2px;
@@ -81,6 +82,7 @@ graph TD
     class OCT09 breakthrough;
     class OCT14 latest;
     class OCT24 latest;
+    class NOV01 latest;
 ```
 
 ---
@@ -190,7 +192,7 @@ Different roles require different entry points into this research. Below is a gu
 
 ---
 
-## Chronological Research Index (Papers 1 to 17)
+## Chronological Research Index (Papers 1 to 18)
 
 ### 1. [18-08-2026: SOC Phishing & Email Header Analysis Reference](./On%2018-08-2026%20i%20learned%20%20SOC%20Phishing%20&%20Email%20Header%20Analysis%20%20Reference.md)
 * **Focus:** Deep technical analysis of SMTP transaction mechanics, hop-by-hop header chain reconstruction, SPF/DKIM/DMARC validation checks, and regex extraction patterns.
@@ -262,6 +264,10 @@ Different roles require different entry points into this research. Below is a gu
 * **Focus:** Treats the backup-vs-recovery gap as a measurement failure, not a technology failure. Presents the **Recovery Denial Chain** (eight stages of how attackers remove restore capability before encrypting), the **Recovery Assurance Model ($RAM$)** (six multiplicative components that convert restore assumptions into scored quantities), eight detection rules with a lab-only validation protocol, a six-tier restore test ladder, and an eight-layer recovery safety architecture. Four datasets converge on the same picture: Unit 42 found attackers targeted backups in 26% of extortion cases; Veeam found 90% of leaders confident in recovery yet only 28% of ransomware victims fully restored all affected data; Sophos found median recovery cost eight times higher when backups were compromised.
 * **Key Deliverables:** Recovery Denial Chain (8-stage attacker sequence); Recovery Assurance Model ($RAM$) with six scored components; eight KQL/SPL detection rules covering backup job tampering, catalog deletion, object-lock bypass, and restore inhibition; six-tier restore test ladder; eight-layer recovery safety architecture; telemetry dependency matrix (12 log sources); and governance sign-off gate templates for audit-proof recovery assurance.
 
+### 18. [01-11-2026: The Exploit Window Paradox — From Vulnerability Disclosure to Confirmed Compromise: Why Patching Does Not Prove Security](./On%2001-11-2026%20THE%20EXPLOIT%20WINDOW%20PARADOX%20From%20Vulnerability%20Disclosure%20to%20Confirmed%20Compromise:%20Why%20Patching%20Does%20Not%20Prove%20Security.md)
+* **Focus:** Analyses the temporal gap between vulnerability disclosure, exploit development, active exploitation, and enterprise patch deployment. Proves that treating patch deployment as the endpoint of a mitigation effort is a measurement failure. Introduces the four-phase Exploit Window Lifecycle, visualises attacker-vs-defender timelines through Mermaid Gantt charts and flowcharts, and presents a structured post-patch hunting protocol to close the residual gap.
+* **Key Deliverables:** Exploit Window Lifecycle (four-phase model); attacker-vs-defender Gantt timeline; end-to-end system flowchart (disclosure through mitigation confirmation); five-step post-patch hunting protocol (telemetry collection, indicator generation, threat-intel correlation, remediation validation, continuous monitoring); and a four-area recommendations table covering detection, patch management, post-patch verification, and cross-team communication.
+
 ---
 
 ## Series Changelog
@@ -285,6 +291,7 @@ Different roles require different entry points into this research. Below is a gu
 | **09-10-2026** | Authentication Coercion Chains (ACCA Model) | 2.0 | Catalog of 8 coercion primitives, 4-minute attack timeline, KQL/SPL correlation queries, netsh RPC filters, and 4-layer safety architecture. |
 | **14-10-2026** | The Invisible Tenant: Long-Dwell Persistence | 1.2 | Four invisibility principles; 7 long-dwell technique deep-dives (scheduled tasks, Golden Tickets, cloud-sync C2, WMI subscriptions, backdoor accounts, ADCS certificate backdoors, Shadow Credentials); 7 Phase 2 detection rules (SPL + KQL) with ATT&CK mapping and simulation-based validation protocol; data-source dependency matrix; 13-category IR persistence checklist; ITSM krbtgt double-reset workflow; 10-layer Phase 2 safety architecture; three-phase detection investment model; and 665×–1,330× ROI evidence. |
 | **24-10-2026** | The Recovery Paradox: When Documented Backup Controls Fail During a Real Cyber Incident | 1.0 | Recovery Denial Chain (8 attacker stages targeting restore capability); Recovery Assurance Model ($RAM$) with 6 scored components; 8 KQL/SPL detection rules (backup job tampering, catalog deletion, object-lock bypass, restore inhibition); 6-tier restore test ladder; 8-layer recovery safety architecture; 12-source telemetry dependency matrix; and governance sign-off gate templates. |
+| **01-11-2026** | The Exploit Window Paradox: From Vulnerability Disclosure to Confirmed Compromise | 1.0 | Four-phase Exploit Window Lifecycle; attacker-vs-defender Gantt timeline; end-to-end system flowchart; five-step post-patch hunting protocol; and a four-area recommendations table. |
 
 ---
 
